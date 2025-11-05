@@ -5,7 +5,9 @@ import { CheckoutDialog, CheckoutData } from "@/components/CheckoutDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Store } from "lucide-react";
+import { Loader2, Store, User, LogIn, Shield } from "lucide-react";
+import { NavLink } from "@/components/NavLink";
+import { Button } from "@/components/ui/button";
 
 interface Product {
   id: string;
@@ -32,11 +34,47 @@ const Index = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     fetchCategories();
     fetchProducts();
+    checkAuth();
   }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user || null);
+    
+    if (session?.user) {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .eq("role", "admin")
+        .single();
+      
+      setIsAdmin(!!data);
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+      if (session?.user) {
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .eq("role", "admin")
+          .single()
+          .then(({ data }) => setIsAdmin(!!data));
+      } else {
+        setIsAdmin(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  };
 
   const fetchCategories = async () => {
     const { data, error } = await supabase
@@ -191,6 +229,31 @@ const Index = () => {
               <h1 className="text-xl font-bold text-foreground">Buy More</h1>
               <p className="text-xs text-muted-foreground">Compre o que você precisa mais</p>
             </div>
+          </div>
+          <div className="flex items-center gap-4">
+            {user ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm flex items-center gap-1 text-muted-foreground">
+                  <User className="h-4 w-4" />
+                  {user.email}
+                </span>
+                {isAdmin && (
+                  <NavLink to="/admin">
+                    <Button variant="default" size="sm">
+                      <Shield className="h-4 w-4 mr-1" />
+                      Admin
+                    </Button>
+                  </NavLink>
+                )}
+              </div>
+            ) : (
+              <NavLink to="/auth">
+                <Button variant="default" size="sm">
+                  <LogIn className="h-4 w-4 mr-1" />
+                  Entrar
+                </Button>
+              </NavLink>
+            )}
           </div>
         </div>
       </header>

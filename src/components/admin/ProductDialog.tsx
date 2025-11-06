@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { Upload, X } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products">;
@@ -49,6 +50,9 @@ export const ProductDialog = ({
     image_url: "",
     category_id: "",
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   useEffect(() => {
     if (product) {
@@ -61,6 +65,7 @@ export const ProductDialog = ({
         image_url: product.image_url || "",
         category_id: product.category_id || "",
       });
+      setImagePreview(product.image_url || "");
     } else {
       setFormData({
         name: "",
@@ -71,18 +76,58 @@ export const ProductDialog = ({
         image_url: "",
         category_id: "",
       });
+      setImagePreview("");
     }
+    setImageFile(null);
   }, [product, open]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("product-images")
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from("product-images")
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      let imageUrl = formData.image_url;
+
+      // Upload new image if selected
+      if (imageFile) {
+        setUploadingImage(true);
+        imageUrl = await uploadImage(imageFile);
+      }
+
       const data = {
         name: formData.name,
         description: formData.description || null,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         unit: formData.unit,
-        image_url: formData.image_url || null,
+        image_url: imageUrl || null,
         category_id: formData.category_id || null,
       };
 
@@ -98,6 +143,7 @@ export const ProductDialog = ({
       }
     },
     onSuccess: () => {
+      setUploadingImage(false);
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       toast({
@@ -107,6 +153,7 @@ export const ProductDialog = ({
       onOpenChange(false);
     },
     onError: (error: any) => {
+      setUploadingImage(false);
       toast({
         title: "Erro",
         description: error.message,
@@ -224,23 +271,48 @@ export const ProductDialog = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="image_url">URL da Imagem</Label>
-            <Input
-              id="image_url"
-              type="url"
-              placeholder="https://exemplo.com/imagem.jpg"
-              value={formData.image_url}
-              onChange={(e) =>
-                setFormData({ ...formData, image_url: e.target.value })
-              }
-            />
-            {formData.image_url && (
-              <div className="mt-2 aspect-video bg-muted rounded-lg overflow-hidden">
+            <Label>Imagem do Produto</Label>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById("image-upload")?.click()}
+                  className="w-full"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Fazer Upload da Imagem
+                </Button>
+              </div>
+            </div>
+            
+            {imagePreview && (
+              <div className="relative mt-2 aspect-video bg-muted rounded-lg overflow-hidden">
                 <img
-                  src={formData.image_url}
+                  src={imagePreview}
                   alt="Preview"
                   className="w-full h-full object-cover"
                 />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="absolute top-2 right-2"
+                  onClick={() => {
+                    setImageFile(null);
+                    setImagePreview("");
+                    setFormData({ ...formData, image_url: "" });
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             )}
           </div>
@@ -253,8 +325,8 @@ export const ProductDialog = ({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? "Salvando..." : "Salvar"}
+            <Button type="submit" disabled={saveMutation.isPending || uploadingImage}>
+              {uploadingImage ? "Fazendo upload..." : saveMutation.isPending ? "Salvando..." : "Salvar"}
             </Button>
           </div>
         </form>

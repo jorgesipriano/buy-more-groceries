@@ -2,12 +2,15 @@ import { useState, useEffect } from "react";
 import { ProductCard } from "@/components/ProductCard";
 import { Cart, CartItem } from "@/components/Cart";
 import { CheckoutDialog, CheckoutData } from "@/components/CheckoutDialog";
+import { PromoCarousel } from "@/components/PromoCarousel";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Store, User, LogIn, Shield } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, Store, User, LogIn, Shield, Search, ShoppingCart } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface Product {
   id: string;
@@ -36,6 +39,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchCategories();
@@ -207,10 +211,15 @@ const Index = () => {
     }
   };
 
-  const filteredProducts =
-    selectedCategory === "all"
-      ? products
-      : products.filter((p) => p.category_id === selectedCategory);
+  const filteredProducts = products.filter((product) => {
+    const matchesCategory =
+      selectedCategory === "all" || product.category_id === selectedCategory;
+    const matchesSearch =
+      searchQuery === "" ||
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const total = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -220,48 +229,61 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80">
-              <Store className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">Buy More</h1>
-              <p className="text-xs text-muted-foreground">Compre o que você precisa mais</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            {user ? (
-              <div className="flex items-center gap-3">
-                <span className="text-sm flex items-center gap-1 text-muted-foreground">
-                  <User className="h-4 w-4" />
-                  {user.email}
-                </span>
-                {isAdmin && (
-                  <NavLink to="/admin">
-                    <Button variant="default" size="sm">
-                      <Shield className="h-4 w-4 mr-1" />
-                      Admin
-                    </Button>
-                  </NavLink>
-                )}
+        <div className="container px-4 py-3">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80">
+                <Store className="h-5 w-5 text-primary-foreground" />
               </div>
-            ) : (
-              <NavLink to="/auth">
-                <Button variant="default" size="sm">
-                  <LogIn className="h-4 w-4 mr-1" />
-                  Entrar
-                </Button>
-              </NavLink>
-            )}
+              <div>
+                <h1 className="text-xl font-bold text-foreground">Buy More</h1>
+                <p className="text-xs text-muted-foreground">Compre o que você precisa mais</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {user ? (
+                <>
+                  {isAdmin && (
+                    <NavLink to="/admin">
+                      <Button variant="outline" size="sm">
+                        <Shield className="h-4 w-4 mr-1" />
+                        Admin
+                      </Button>
+                    </NavLink>
+                  )}
+                  <Button variant="ghost" size="sm" className="gap-1 hidden md:flex">
+                    <User className="h-4 w-4" />
+                    <span className="text-xs max-w-[100px] truncate">{user.email}</span>
+                  </Button>
+                </>
+              ) : (
+                <NavLink to="/auth">
+                  <Button variant="default" size="sm">
+                    <LogIn className="h-4 w-4 md:mr-1" />
+                    <span className="hidden md:inline">Entrar / Cadastrar</span>
+                  </Button>
+                </NavLink>
+              )}
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="relative gap-1"
+                onClick={() => {
+                  const cartEl = document.querySelector('[data-cart]');
+                  cartEl?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                <ShoppingCart className="h-4 w-4" />
+                {cartItems.length > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                    {cartItems.length}
+                  </Badge>
+                )}
+              </Button>
+            </div>
           </div>
-        </div>
-      </header>
 
-      <main className="container px-4 py-8">
-        <div className="mb-8">
-          <h2 className="mb-4 text-3xl font-bold">Nossos Produtos</h2>
-          <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
+          <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-3">
             <TabsList className="flex h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
               <TabsTrigger
                 value="all"
@@ -280,7 +302,26 @@ const Index = () => {
               ))}
             </TabsList>
           </Tabs>
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar produtos..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </div>
+      </header>
+
+      <main className="container px-4 py-8">
+        <div className="mb-8">
+          <PromoCarousel />
+        </div>
+
+        <h2 className="mb-6 text-3xl font-bold">Nossos Produtos</h2>
 
         {loading ? (
           <div className="flex min-h-[400px] items-center justify-center">

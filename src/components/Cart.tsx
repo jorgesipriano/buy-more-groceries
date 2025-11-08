@@ -29,6 +29,7 @@ export function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout }: Cart
         <Button 
           size="lg" 
           className="fixed bottom-6 right-6 z-50 h-14 gap-2 rounded-full bg-gradient-to-r from-primary to-primary/90 px-6 shadow-2xl transition-all hover:scale-105 hover:shadow-xl"
+          data-cart
         >
           <ShoppingCart className="h-5 w-5" />
           <span className="font-semibold">Carrinho</span>

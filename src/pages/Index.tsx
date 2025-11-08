@@ -3,6 +3,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { Cart, CartItem } from "@/components/Cart";
 import { CheckoutDialog, CheckoutData } from "@/components/CheckoutDialog";
 import { PromoCarousel } from "@/components/PromoCarousel";
+import { PromoBanner } from "@/components/PromoBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -228,6 +229,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <PromoBanner />
+      
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container px-4 py-3">
           <div className="flex items-center justify-between mb-3">

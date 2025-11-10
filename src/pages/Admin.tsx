@@ -6,19 +6,26 @@ import { useToast } from "@/hooks/use-toast";
 import { LogOut, Plus, Home } from "lucide-react";
 import { ProductList } from "@/components/admin/ProductList";
 import { ProductDialog } from "@/components/admin/ProductDialog";
+import { PromotionList } from "@/components/admin/PromotionList";
+import { PromotionDialog } from "@/components/admin/PromotionDialog";
 import { NavLink } from "@/components/NavLink";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products">;
 type Category = Tables<"categories">;
+type Promotion = Tables<"promotions">;
 
 export default function Admin() {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -31,7 +38,7 @@ export default function Admin() {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
-      navigate("/auth");
+      navigate("/admin");
       return;
     }
 
@@ -83,6 +90,16 @@ export default function Admin() {
     setDialogOpen(true);
   };
 
+  const handleEditPromotion = (promotion: Promotion) => {
+    setEditingPromotion(promotion);
+    setPromotionDialogOpen(true);
+  };
+
+  const handleCreatePromotion = () => {
+    setEditingPromotion(null);
+    setPromotionDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -117,15 +134,34 @@ export default function Admin() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold">Gerenciar Produtos</h2>
-          <Button onClick={handleCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Produto
-          </Button>
-        </div>
+        <Tabs defaultValue="products" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="products">Produtos</TabsTrigger>
+            <TabsTrigger value="promotions">Promoções</TabsTrigger>
+          </TabsList>
 
-        <ProductList onEdit={handleEdit} />
+          <TabsContent value="products">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-3xl font-bold">Gerenciar Produtos</h2>
+              <Button onClick={handleCreate}>
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Produto
+              </Button>
+            </div>
+            <ProductList onEdit={handleEdit} />
+          </TabsContent>
+
+          <TabsContent value="promotions">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-3xl font-bold">Gerenciar Promoções</h2>
+              <Button onClick={handleCreatePromotion}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Promoção
+              </Button>
+            </div>
+            <PromotionList onEdit={handleEditPromotion} refreshKey={refreshKey} />
+          </TabsContent>
+        </Tabs>
       </main>
 
       <ProductDialog
@@ -133,6 +169,13 @@ export default function Admin() {
         onOpenChange={setDialogOpen}
         product={editingProduct}
         categories={categories}
+      />
+
+      <PromotionDialog
+        open={promotionDialogOpen}
+        onOpenChange={setPromotionDialogOpen}
+        promotion={editingPromotion}
+        onSuccess={() => setRefreshKey(prev => prev + 1)}
       />
     </div>
   );

@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Loader2, Store, User, LogIn, Shield, Search, ShoppingCart, Package } from "lucide-react";
+import { Loader2, Store, Shield, Search, ShoppingCart } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +38,6 @@ const Index = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -50,7 +49,6 @@ const Index = () => {
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    setUser(session?.user || null);
     
     if (session?.user) {
       const { data } = await supabase
@@ -64,7 +62,6 @@ const Index = () => {
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
       if (session?.user) {
         supabase
           .from("user_roles")
@@ -248,32 +245,11 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {user ? (
-                <>
-                  {isAdmin && (
-                    <NavLink to="/admin">
-                      <Button variant="outline" size="sm">
-                        <Shield className="h-4 w-4 mr-1" />
-                        Admin
-                      </Button>
-                    </NavLink>
-                  )}
-                  <NavLink to="/my-orders">
-                    <Button variant="outline" size="sm">
-                      <Package className="h-4 w-4 md:mr-1" />
-                      <span className="hidden md:inline">Meus Pedidos</span>
-                    </Button>
-                  </NavLink>
-                  <Button variant="ghost" size="sm" className="gap-1 hidden md:flex">
-                    <User className="h-4 w-4" />
-                    <span className="text-xs max-w-[100px] truncate">{user.email}</span>
-                  </Button>
-                </>
-              ) : (
-                <NavLink to="/auth">
-                  <Button variant="default" size="sm">
-                    <LogIn className="h-4 w-4 md:mr-1" />
-                    <span className="hidden md:inline">Entrar / Cadastrar</span>
+              {isAdmin && (
+                <NavLink to="/admin">
+                  <Button variant="outline" size="sm">
+                    <Shield className="h-4 w-4 mr-1" />
+                    Admin
                   </Button>
                 </NavLink>
               )}

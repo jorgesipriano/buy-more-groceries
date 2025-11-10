@@ -81,33 +81,39 @@ export type Database = {
         Row: {
           created_at: string
           customer_address: string
-          customer_email: string
+          customer_email: string | null
           customer_name: string
           customer_phone: string
           id: string
           payment_method: string
+          scheduled_date: string | null
+          scheduled_time: string | null
           status: string
           total: number
         }
         Insert: {
           created_at?: string
           customer_address: string
-          customer_email: string
+          customer_email?: string | null
           customer_name: string
           customer_phone: string
           id?: string
           payment_method: string
+          scheduled_date?: string | null
+          scheduled_time?: string | null
           status?: string
           total: number
         }
         Update: {
           created_at?: string
           customer_address?: string
-          customer_email?: string
+          customer_email?: string | null
           customer_name?: string
           customer_phone?: string
           id?: string
           payment_method?: string
+          scheduled_date?: string | null
+          scheduled_time?: string | null
           status?: string
           total?: number
         }

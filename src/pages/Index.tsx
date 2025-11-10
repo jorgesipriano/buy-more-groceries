@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Loader2, Store, User, LogIn, Shield, Search, ShoppingCart } from "lucide-react";
+import { Loader2, Store, User, LogIn, Shield, Search, ShoppingCart, Package } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -167,15 +167,19 @@ const Index = () => {
         0
       );
 
+      const scheduledDateTime = new Date(`${data.scheduledDate}T${data.scheduledTime}:00`);
+
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
           customer_name: data.customerName,
-          customer_email: data.customerEmail,
           customer_phone: data.customerPhone,
           customer_address: data.customerAddress,
           payment_method: data.paymentMethod,
           total,
+          scheduled_date: scheduledDateTime.toISOString(),
+          scheduled_time: data.scheduledTime,
+          status: 'pending',
         })
         .select()
         .single();
@@ -254,6 +258,12 @@ const Index = () => {
                       </Button>
                     </NavLink>
                   )}
+                  <NavLink to="/my-orders">
+                    <Button variant="outline" size="sm">
+                      <Package className="h-4 w-4 md:mr-1" />
+                      <span className="hidden md:inline">Meus Pedidos</span>
+                    </Button>
+                  </NavLink>
                   <Button variant="ghost" size="sm" className="gap-1 hidden md:flex">
                     <User className="h-4 w-4" />
                     <span className="text-xs max-w-[100px] truncate">{user.email}</span>

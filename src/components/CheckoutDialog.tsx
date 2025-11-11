@@ -3,8 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CreditCard, Smartphone, Banknote, Calendar } from "lucide-react";
+
+
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -18,8 +18,6 @@ interface CheckoutDialogProps {
 export interface CheckoutData {
   customerName: string;
   customerPhone: string;
-  customerAddress: string;
-  paymentMethod: string;
   scheduledDate: string;
   scheduledTime: string;
 }
@@ -30,8 +28,6 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
   const [formData, setFormData] = useState<CheckoutData>({
     customerName: "",
     customerPhone: "",
-    customerAddress: "",
-    paymentMethod: "pix",
     scheduledDate: "",
     scheduledTime: "",
   });
@@ -66,10 +62,10 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.customerName || !formData.customerPhone || !formData.customerAddress || !formData.scheduledDate || !formData.scheduledTime) {
+    if (!formData.customerPhone) {
       toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos",
+        title: "Telefone obrigatório",
+        description: "Por favor, preencha o telefone",
         variant: "destructive",
       });
       return;
@@ -87,17 +83,6 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nome Completo *</Label>
-            <Input
-              id="name"
-              value={formData.customerName}
-              onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-              placeholder="Digite seu nome"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="phone">Telefone *</Label>
             <Input
               id="phone"
@@ -109,18 +94,17 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="address">Número da Casa *</Label>
+            <Label htmlFor="name">Nome Completo</Label>
             <Input
-              id="address"
-              value={formData.customerAddress}
-              onChange={(e) => setFormData({ ...formData, customerAddress: e.target.value })}
-              placeholder="Ex: 123"
-              required
+              id="name"
+              value={formData.customerName}
+              onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+              placeholder="Digite seu nome"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="date">Data de Entrega *</Label>
+            <Label htmlFor="date">Data de Entrega</Label>
             <Select
               value={formData.scheduledDate}
               onValueChange={(value) => setFormData({ ...formData, scheduledDate: value })}
@@ -139,7 +123,7 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="time">Horário de Entrega *</Label>
+            <Label htmlFor="time">Horário de Entrega</Label>
             <Select
               value={formData.scheduledTime}
               onValueChange={(value) => setFormData({ ...formData, scheduledTime: value })}
@@ -152,36 +136,6 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
                 <SelectItem value="15:00">15:00</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-3">
-            <Label>Forma de Pagamento *</Label>
-            <RadioGroup
-              value={formData.paymentMethod}
-              onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}
-            >
-              <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                <RadioGroupItem value="pix" id="pix" />
-                <Label htmlFor="pix" className="flex flex-1 cursor-pointer items-center gap-2">
-                  <Smartphone className="h-4 w-4 text-primary" />
-                  PIX
-                </Label>
-              </div>
-              <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                <RadioGroupItem value="cartao" id="cartao" />
-                <Label htmlFor="cartao" className="flex flex-1 cursor-pointer items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-primary" />
-                  Cartão de Crédito/Débito
-                </Label>
-              </div>
-              <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-accent/50">
-                <RadioGroupItem value="dinheiro" id="dinheiro" />
-                <Label htmlFor="dinheiro" className="flex flex-1 cursor-pointer items-center gap-2">
-                  <Banknote className="h-4 w-4 text-primary" />
-                  Dinheiro
-                </Label>
-              </div>
-            </RadioGroup>
           </div>
 
           <div className="rounded-lg bg-muted p-4">

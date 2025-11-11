@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Loader2, Store, Shield, Search, Package } from "lucide-react";
+import { Loader2, Store, Shield, Search, Package, ClipboardList } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import logoImage from "@/assets/logo.png";
@@ -164,18 +164,20 @@ const Index = () => {
         0
       );
 
-      const scheduledDateTime = new Date(`${data.scheduledDate}T${data.scheduledTime}:00`);
+      const scheduledDateTime = data.scheduledDate && data.scheduledTime 
+        ? new Date(`${data.scheduledDate}T${data.scheduledTime}:00`)
+        : null;
 
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
-          customer_name: data.customerName,
+          customer_name: data.customerName || '',
           customer_phone: data.customerPhone,
-          customer_address: data.customerAddress,
-          payment_method: data.paymentMethod,
+          customer_address: '',
+          payment_method: '',
           total,
-          scheduled_date: scheduledDateTime.toISOString(),
-          scheduled_time: data.scheduledTime,
+          scheduled_date: scheduledDateTime?.toISOString() || null,
+          scheduled_time: data.scheduledTime || null,
           status: 'pending',
         })
         .select()
@@ -240,7 +242,7 @@ const Index = () => {
             </div>
             <div className="flex items-center gap-2">
               {isAdmin && (
-                <NavLink to="/admin">
+                <NavLink to="/admin-panel">
                   <Button variant="outline" size="sm">
                     <Shield className="h-4 w-4 mr-1" />
                     Admin
@@ -248,9 +250,9 @@ const Index = () => {
                 </NavLink>
               )}
               <NavLink to="/order-status">
-                <Button variant="outline" size="sm">
-                  <Package className="h-4 w-4 mr-1" />
-                  Meus Pedidos
+                <Button variant="outline" size="sm" className="animate-pulse">
+                  <ClipboardList className="h-4 w-4 mr-1" />
+                  Status do Pedido
                 </Button>
               </NavLink>
               <Cart

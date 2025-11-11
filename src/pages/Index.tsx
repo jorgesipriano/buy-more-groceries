@@ -8,10 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Loader2, Store, Shield, Search, ShoppingCart } from "lucide-react";
+import { Loader2, Store, Shield, Search, Package } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import logoImage from "@/assets/logo.png";
 
 interface Product {
   id: string;
@@ -236,13 +236,7 @@ const Index = () => {
         <div className="container px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80">
-                <Store className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-foreground">Buy More</h1>
-                <p className="text-xs text-muted-foreground">Compre o que você precisa mais</p>
-              </div>
+              <img src={logoImage} alt="Buy More" className="h-12 w-auto" />
             </div>
             <div className="flex items-center gap-2">
               {isAdmin && (
@@ -253,22 +247,12 @@ const Index = () => {
                   </Button>
                 </NavLink>
               )}
-              <Button 
-                variant="default" 
-                size="sm" 
-                className="relative gap-1"
-                onClick={() => {
-                  const cartEl = document.querySelector('[data-cart]');
-                  cartEl?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                <ShoppingCart className="h-4 w-4" />
-                {cartItems.length > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
-                    {cartItems.length}
-                  </Badge>
-                )}
-              </Button>
+              <NavLink to="/order-status">
+                <Button variant="outline" size="sm">
+                  <Package className="h-4 w-4 mr-1" />
+                  Meus Pedidos
+                </Button>
+              </NavLink>
             </div>
           </div>
 

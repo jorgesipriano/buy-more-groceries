@@ -253,6 +253,12 @@ const Index = () => {
                   Meus Pedidos
                 </Button>
               </NavLink>
+              <Cart
+                items={cartItems}
+                onUpdateQuantity={updateCartQuantity}
+                onRemoveItem={removeFromCart}
+                onCheckout={() => setCheckoutOpen(true)}
+              />
             </div>
           </div>
 
@@ -327,13 +333,6 @@ const Index = () => {
           </div>
         )}
       </main>
-
-      <Cart
-        items={cartItems}
-        onUpdateQuantity={updateCartQuantity}
-        onRemoveItem={removeFromCart}
-        onCheckout={() => setCheckoutOpen(true)}
-      />
 
       <CheckoutDialog
         open={checkoutOpen}

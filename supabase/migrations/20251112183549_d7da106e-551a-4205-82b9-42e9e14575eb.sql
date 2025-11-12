@@ -6,7 +6,7 @@ DECLARE
 BEGIN
   SELECT extensions.http_post(
     url := 'http://64.181.161.17:3002/webhook-atualizar-pedido',
-    headers := '{"Content-Type": "application/json", "Authorization": "Bearer Jj@@9590"}'::jsonb,
+    headers := '{"Content-Type": "application/json", "Authorization": "Jj@@9590"}'::jsonb,
     body := jsonb_build_object(
       'type', 'UPDATE',
       'table', 'orders',

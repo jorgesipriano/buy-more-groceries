@@ -49,7 +49,7 @@ const Index = () => {
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    
+   
     if (session?.user) {
       const { data } = await supabase
         .from("user_roles")
@@ -57,10 +57,9 @@ const Index = () => {
         .eq("user_id", session.user.id)
         .eq("role", "admin")
         .single();
-      
+     
       setIsAdmin(!!data);
     }
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         supabase
@@ -74,7 +73,6 @@ const Index = () => {
         setIsAdmin(false);
       }
     });
-
     return () => subscription.unsubscribe();
   };
 
@@ -83,12 +81,10 @@ const Index = () => {
       .from("categories")
       .select("*")
       .order("name");
-
     if (error) {
       console.error("Error fetching categories:", error);
       return;
     }
-
     setCategories(data || []);
   };
 
@@ -98,7 +94,6 @@ const Index = () => {
       .from("products")
       .select("*")
       .order("name");
-
     if (error) {
       console.error("Error fetching products:", error);
       toast({
@@ -115,7 +110,6 @@ const Index = () => {
   const addToCart = (productId: string, quantity: number) => {
     const product = products.find((p) => p.id === productId);
     if (!product) return;
-
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === productId);
       if (existing) {
@@ -136,7 +130,6 @@ const Index = () => {
         },
       ];
     });
-
     toast({
       title: "Adicionado ao carrinho!",
       description: `${quantity}x ${product.name}`,
@@ -163,46 +156,69 @@ const Index = () => {
         (sum, item) => sum + item.price * item.quantity,
         0
       );
-
-      const scheduledDateTime = data.scheduledDate && data.scheduledTime 
-        ? new Date(`${data.scheduledDate}T${data.scheduledTime}:00`)
-        : null;
-
+      // 1. ENVIA PARA O SUPABASE (O que já existia)
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
-          customer_name: data.customerName || '',
+          customer_name: data.customerName,
+          customer_email: data.customerEmail,
           customer_phone: data.customerPhone,
-          customer_address: '',
-          payment_method: '',
+          customer_address: data.customerAddress,
+          payment_method: data.paymentMethod,
           total,
-          scheduled_date: scheduledDateTime?.toISOString() || null,
-          scheduled_time: data.scheduledTime || null,
-          status: 'pending',
         })
         .select()
         .single();
-
       if (orderError) throw orderError;
-
+      // --- ADIÇÃO: ENVIA PARA O SEU BOT (VM) ---
+      // Fazemos isso num 'try/catch' separado para não travar a venda se a VM estiver fora
+      try {
+        // Formata os itens para o jeito que seu bot espera
+        const itensFormatados = cartItems.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        }));
+        // Dispara o aviso para sua VM (Troque a senha pela sua real!)
+        fetch("http://64.181.161.17:3002/webhook-novo-pedido", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer abc-minha-senha-super-secreta-123-xyz"
+          },
+          body: JSON.stringify({
+            record: {
+              id: order.id, // ID gerado pelo banco
+              customer_name: data.customerName,
+              customer_phone: data.customerPhone,
+              customer_address: data.customerAddress,
+              customer_complement: "", // Se tiver campo de complemento, coloque aqui
+              payment_method: data.paymentMethod,
+              total_price: total,
+              items: itensFormatados
+            }
+          })
+        });
+        console.log("Aviso enviado para o bot!");
+      } catch (webhookError) {
+        console.error("Falha ao avisar o bot (mas o pedido foi salvo):", webhookError);
+      }
+      // --- FIM DA ADIÇÃO ---
+      // 2. SALVA OS ITENS NO SUPABASE (O que já existia)
       const orderItems = cartItems.map((item) => ({
         order_id: order.id,
         product_id: item.id,
         quantity: item.quantity,
         price: item.price,
       }));
-
       const { error: itemsError } = await supabase
         .from("order_items")
         .insert(orderItems);
-
       if (itemsError) throw itemsError;
-
       toast({
         title: "Pedido realizado com sucesso!",
         description: "Seu pedido foi registrado e está sendo processado.",
       });
-
       setCartItems([]);
       setCheckoutOpen(false);
     } catch (error) {
@@ -233,7 +249,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <PromoBanner />
-      
+     
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container px-4 py-3">
           <div className="flex items-center justify-between mb-3">
@@ -263,7 +279,6 @@ const Index = () => {
               />
             </div>
           </div>
-
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-3">
             <TabsList className="flex h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
               <TabsTrigger
@@ -283,7 +298,6 @@ const Index = () => {
               ))}
             </TabsList>
           </Tabs>
-
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -296,14 +310,11 @@ const Index = () => {
           </div>
         </div>
       </header>
-
       <main className="container px-4 py-8">
         <div className="mb-8">
           <PromoCarousel />
         </div>
-
         <h2 className="mb-6 text-3xl font-bold">Nossos Produtos</h2>
-
         {loading ? (
           <div className="flex min-h-[400px] items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -325,7 +336,6 @@ const Index = () => {
             ))}
           </div>
         )}
-
         {!loading && filteredProducts.length === 0 && (
           <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 text-center">
             <p className="text-lg font-semibold">Nenhum produto encontrado</p>
@@ -335,7 +345,6 @@ const Index = () => {
           </div>
         )}
       </main>
-
       <CheckoutDialog
         open={checkoutOpen}
         onClose={() => setCheckoutOpen(false)}

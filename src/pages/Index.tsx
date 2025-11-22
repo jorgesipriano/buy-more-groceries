@@ -190,6 +190,7 @@ const Index = () => {
             record: {
               id: order.id, // ID gerado pelo banco
               customer_name: data.customerName,
+              customer_email: "cliente@sem-email.com"
               customer_phone: data.customerPhone,
               customer_address: data.customerAddress,
               customer_complement: "", // Se tiver campo de complemento, coloque aqui

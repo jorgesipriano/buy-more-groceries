@@ -250,7 +250,7 @@ const Index = () => {
         <div className="container px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <img src={logoImage} alt="Buy More" className="h-12 w-auto" />
+              <img src={logoImage} alt="Buy More" className="h-12 w-auto bg-white rounded-md p-1" />
             </div>
             <div className="flex items-center gap-2">
               {isAdmin && (

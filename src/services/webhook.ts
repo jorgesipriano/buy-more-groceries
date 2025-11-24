@@ -38,10 +38,9 @@ export const sendOrderNotification = async (orderData: WebhookOrderData) => {
         }
 
         console.log("Webhook enviado com sucesso!");
-        return true;
-    } catch (error) {
+        return { success: true };
+    } catch (error: any) {
         console.error("Falha ao enviar webhook:", error);
-        // Não lançamos o erro para não travar o fluxo do usuário, apenas logamos
-        return false;
+        return { success: false, message: error.message || "Erro desconhecido" };
     }
 };

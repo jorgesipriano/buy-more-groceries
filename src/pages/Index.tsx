@@ -191,7 +191,14 @@ const Index = () => {
         items: itensFormatados
       };
 
-      await sendOrderNotification(webhookData);
+      const webhookResult = await sendOrderNotification(webhookData);
+      if (!webhookResult.success) {
+        toast({
+          title: "Aviso sobre o pedido",
+          description: `Pedido salvo, mas houve erro no aviso: ${webhookResult.message}`,
+          variant: "warning",
+        });
+      }
       // --- FIM DA ADIÇÃO ---
       // 2. SALVA OS ITENS NO SUPABASE (O que já existia)
       const orderItems = cartItems.map((item) => ({

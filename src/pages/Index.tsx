@@ -12,6 +12,7 @@ import { Loader2, Store, Shield, Search, Package, ClipboardList } from "lucide-r
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import logoImage from "@/assets/logo.png";
+import { sendOrderNotification } from "@/services/webhook";
 
 interface Product {
   id: string;
@@ -161,7 +162,7 @@ const Index = () => {
         .from("orders")
         .insert({
           customer_name: data.customerName,
-          customer_email: data.customerEmail,
+          customer_email: "cliente@sem-email.com",
           customer_phone: data.customerPhone,
           customer_address: data.customerAddress,
           payment_method: data.paymentMethod,
@@ -171,39 +172,26 @@ const Index = () => {
         .single();
       if (orderError) throw orderError;
       // --- ADIÇÃO: ENVIA PARA O SEU BOT (VM) ---
-      // Fazemos isso num 'try/catch' separado para não travar a venda se a VM estiver fora
-      try {
-        // Formata os itens para o jeito que seu bot espera
-        const itensFormatados = cartItems.map(item => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price
-        }));
-        // Dispara o aviso para sua VM (Troque a senha pela sua real!)
-        await fetch("http://64.181.161.17:3002/webhook-novo-pedido", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer Jj@@9590"
-          },
-          body: JSON.stringify({
-            record: {
-              id: order.id, // ID gerado pelo banco
-              customer_name: data.customerName,
-              customer_email: "cliente@sem-email.com",
-              customer_phone: data.customerPhone,
-              customer_address: data.customerAddress,
-              customer_complement: "", // Se tiver campo de complemento, coloque aqui
-              payment_method: data.paymentMethod,
-              total_price: total,
-              items: itensFormatados
-            }
-          })
-        });
-        console.log("Aviso enviado para o bot!");
-      } catch (webhookError) {
-        console.error("Falha ao avisar o bot (mas o pedido foi salvo):", webhookError);
-      }
+      // Usando o serviço dedicado para garantir o envio
+      const itensFormatados = cartItems.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price
+      }));
+
+      const webhookData = {
+        id: order.id,
+        customer_name: data.customerName,
+        customer_email: "cliente@sem-email.com",
+        customer_phone: data.customerPhone,
+        customer_address: data.customerAddress,
+        customer_complement: "",
+        payment_method: data.paymentMethod,
+        total_price: total,
+        items: itensFormatados
+      };
+
+      await sendOrderNotification(webhookData);
       // --- FIM DA ADIÇÃO ---
       // 2. SALVA OS ITENS NO SUPABASE (O que já existia)
       const orderItems = cartItems.map((item) => ({

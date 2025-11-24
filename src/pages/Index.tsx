@@ -180,17 +180,17 @@ const Index = () => {
           price: item.price
         }));
         // Dispara o aviso para sua VM (Troque a senha pela sua real!)
-        fetch("http://64.181.161.17:3002/webhook-novo-pedido", {
+        await fetch("http://64.181.161.17:3002/webhook-novo-pedido", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer abc-minha-senha-super-secreta-123-xyz"
+            "Authorization": "Bearer Jj@@9590"
           },
           body: JSON.stringify({
             record: {
               id: order.id, // ID gerado pelo banco
               customer_name: data.customerName,
-              customer_email: "cliente@sem-email.com"
+              customer_email: "cliente@sem-email.com",
               customer_phone: data.customerPhone,
               customer_address: data.customerAddress,
               customer_complement: "", // Se tiver campo de complemento, coloque aqui

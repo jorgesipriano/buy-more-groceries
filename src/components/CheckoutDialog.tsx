@@ -3,8 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -18,6 +16,7 @@ interface CheckoutDialogProps {
 export interface CheckoutData {
   customerName: string;
   customerPhone: string;
+  customerAddress: string;
   scheduledDate: string;
   scheduledTime: string;
 }
@@ -28,6 +27,7 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
   const [formData, setFormData] = useState<CheckoutData>({
     customerName: "",
     customerPhone: "",
+    customerAddress: "",
     scheduledDate: "",
     scheduledTime: "",
   });
@@ -39,33 +39,42 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
   const generateAvailableDates = () => {
     const dates: { date: string; label: string }[] = [];
     const today = new Date();
-    
+
     for (let i = 1; i <= 7; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      
+
       const dayOfWeek = date.getDay();
       if (dayOfWeek !== 0 && dayOfWeek !== 6) {
         const dateStr = date.toISOString().split('T')[0];
-        const label = date.toLocaleDateString('pt-BR', { 
-          weekday: 'short', 
-          day: '2-digit', 
-          month: '2-digit' 
+        const label = date.toLocaleDateString('pt-BR', {
+          weekday: 'short',
+          day: '2-digit',
+          month: '2-digit'
         });
         dates.push({ date: dateStr, label });
       }
     }
-    
+
     setAvailableDates(dates);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.customerPhone) {
       toast({
         title: "Telefone obrigatório",
         description: "Por favor, preencha o telefone",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.customerAddress) {
+      toast({
+        title: "Endereço obrigatório",
+        description: "Por favor, preencha o endereço de entrega",
         variant: "destructive",
       });
       return;
@@ -80,7 +89,7 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
         <DialogHeader>
           <DialogTitle className="text-2xl">Finalizar Pedido</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="phone">Telefone *</Label>
@@ -100,6 +109,17 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
               value={formData.customerName}
               onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
               placeholder="Digite seu nome"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="address">Endereço de Entrega *</Label>
+            <Input
+              id="address"
+              value={formData.customerAddress}
+              onChange={(e) => setFormData({ ...formData, customerAddress: e.target.value })}
+              placeholder="Rua, Número, Bairro"
+              required
             />
           </div>
 
@@ -147,9 +167,9 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
             </div>
           </div>
 
-          <Button 
-            type="submit" 
-            size="lg" 
+          <Button
+            type="submit"
+            size="lg"
             className="w-full bg-gradient-to-r from-secondary to-secondary/90 text-lg font-semibold hover:shadow-lg"
           >
             Confirmar Pedido

@@ -246,11 +246,11 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <PromoBanner />
 
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-40 w-full border-b bg-white backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="container px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <img src={logoImage} alt="Buy More" className="h-12 w-auto bg-white rounded-md p-1" />
+              <img src={logoImage} alt="Buy More" className="h-12 w-auto" />
             </div>
             <div className="flex items-center gap-2">
               {isAdmin && (

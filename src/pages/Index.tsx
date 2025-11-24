@@ -49,7 +49,7 @@ const Index = () => {
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-   
+
     if (session?.user) {
       const { data } = await supabase
         .from("user_roles")
@@ -57,7 +57,7 @@ const Index = () => {
         .eq("user_id", session.user.id)
         .eq("role", "admin")
         .single();
-     
+
       setIsAdmin(!!data);
     }
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -222,11 +222,11 @@ const Index = () => {
       });
       setCartItems([]);
       setCheckoutOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating order:", error);
       toast({
         title: "Erro ao finalizar pedido",
-        description: "Tente novamente mais tarde",
+        description: error.message || "Erro desconhecido. Verifique o console.",
         variant: "destructive",
       });
     }
@@ -250,7 +250,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <PromoBanner />
-     
+
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container px-4 py-3">
           <div className="flex items-center justify-between mb-3">

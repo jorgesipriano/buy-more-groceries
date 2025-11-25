@@ -91,14 +91,30 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
       return;
     }
 
-    id = "phone"
-    value = { formData.customerPhone }
-    onChange = {(e) => setFormData({ ...formData, customerPhone: e.target.value })
-}
-placeholder = "(00) 00000-0000"
-required
-  />
-          </div >
+    onConfirm(formData);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-2xl">Finalizar Pedido</DialogTitle>
+          <DialogDescription>
+            Preencha seus dados para concluir a compra.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="phone">Telefone *</Label>
+            <Input
+              id="phone"
+              value={formData.customerPhone}
+              onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
+              placeholder="(00) 00000-0000"
+              required
+            />
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="name">Nome Completo</Label>
@@ -190,8 +206,8 @@ required
           >
             Confirmar Pedido
           </Button>
-        </form >
-      </DialogContent >
-    </Dialog >
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

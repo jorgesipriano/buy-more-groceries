@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -91,27 +91,14 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
       return;
     }
 
-    onConfirm(formData);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">Finalizar Pedido</DialogTitle>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="phone">Telefone *</Label>
-            <Input
-              id="phone"
-              value={formData.customerPhone}
-              onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-              placeholder="(00) 00000-0000"
-              required
-            />
-          </div>
+    id = "phone"
+    value = { formData.customerPhone }
+    onChange = {(e) => setFormData({ ...formData, customerPhone: e.target.value })
+}
+placeholder = "(00) 00000-0000"
+required
+  />
+          </div >
 
           <div className="space-y-2">
             <Label htmlFor="name">Nome Completo</Label>
@@ -203,8 +190,8 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
           >
             Confirmar Pedido
           </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </form >
+      </DialogContent >
+    </Dialog >
   );
 }

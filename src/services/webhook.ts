@@ -16,7 +16,7 @@ export interface WebhookOrderData {
 }
 
 export const sendOrderNotification = async (orderData: WebhookOrderData) => {
-    const WEBHOOK_URL = "http://64.181.161.17:3002/webhook-novo-pedido";
+    const WEBHOOK_URL = "https://00889fb9d85e.ngrok-free.app/webhook-novo-pedido";
     const WEBHOOK_SECRET = "Jj@@9590";
 
     try {

@@ -26,7 +26,8 @@ export const sendOrderNotification = async (orderData: WebhookOrderData) => {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${WEBHOOK_SECRET}`
+                "Authorization": `Bearer ${WEBHOOK_SECRET}`,
+                "ngrok-skip-browser-warning": "true"
             },
             body: JSON.stringify({
                 record: orderData

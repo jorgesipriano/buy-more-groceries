@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Loader2, Store, Shield, Search, Package, ClipboardList } from "lucide-react";
+import { Loader2, Store, Shield, Search, Package, ClipboardList, Utensils, ShoppingBasket } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import logoImage from "@/assets/logo.png";
@@ -41,6 +41,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeType, setActiveType] = useState<"supermarket" | "snacks">("supermarket");
 
   useEffect(() => {
     fetchCategories();
@@ -229,7 +230,9 @@ const Index = () => {
 
   const filteredProducts = products.filter((product) => {
     const matchesCategory =
-      selectedCategory === "all" || product.category_id === selectedCategory;
+      selectedCategory === "all"
+        ? categories.find(c => c.id === product.category_id)?.type === activeType
+        : product.category_id === selectedCategory;
     const matchesSearch =
       searchQuery === "" ||
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -237,13 +240,15 @@ const Index = () => {
     return matchesCategory && matchesSearch;
   });
 
+  const displayedCategories = categories.filter(c => (c.type || 'supermarket') === activeType);
+
   const total = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20" >
       <PromoBanner />
 
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -275,6 +280,36 @@ const Index = () => {
               />
             </div>
           </div>
+
+          <div className="flex justify-center mb-6">
+            <div className="bg-muted p-1 rounded-full flex gap-2">
+              <Button
+                variant={activeType === "supermarket" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => {
+                  setActiveType("supermarket");
+                  setSelectedCategory("all");
+                }}
+                className="rounded-full px-6"
+              >
+                <ShoppingBasket className="w-4 h-4 mr-2" />
+                Mercado
+              </Button>
+              <Button
+                variant={activeType === "snacks" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => {
+                  setActiveType("snacks");
+                  setSelectedCategory("all");
+                }}
+                className="rounded-full px-6"
+              >
+                <Utensils className="w-4 h-4 mr-2" />
+                Lanches
+              </Button>
+            </div>
+          </div>
+
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-3">
             <TabsList className="flex h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
               <TabsTrigger
@@ -283,7 +318,7 @@ const Index = () => {
               >
                 Todos
               </TabsTrigger>
-              {categories.map((category) => (
+              {displayedCategories.map((category) => (
                 <TabsTrigger
                   key={category.id}
                   value={category.id}
@@ -347,7 +382,7 @@ const Index = () => {
         total={total}
         onConfirm={handleCheckout}
       />
-    </div>
+    </div >
   );
 };
 

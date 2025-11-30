@@ -8,6 +8,8 @@ import { ProductList } from "@/components/admin/ProductList";
 import { ProductDialog } from "@/components/admin/ProductDialog";
 import { PromotionList } from "@/components/admin/PromotionList";
 import { PromotionDialog } from "@/components/admin/PromotionDialog";
+import { OrderList } from "@/components/admin/OrderList";
+import { CategoryList } from "@/components/admin/CategoryList";
 import { NavLink } from "@/components/NavLink";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Tables } from "@/integrations/supabase/types";
@@ -36,7 +38,7 @@ export default function Admin() {
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       navigate("/admin");
       return;
@@ -71,7 +73,7 @@ export default function Admin() {
       .from("categories")
       .select("*")
       .order("name");
-    
+
     if (data) setCategories(data);
   };
 
@@ -137,8 +139,18 @@ export default function Admin() {
         <Tabs defaultValue="products" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="products">Produtos</TabsTrigger>
+            <TabsTrigger value="categories">Categorias</TabsTrigger>
             <TabsTrigger value="promotions">Promoções</TabsTrigger>
+            <TabsTrigger value="orders">Pedidos</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="orders">
+            <OrderList />
+          </TabsContent>
+
+          <TabsContent value="categories">
+            <CategoryList />
+          </TabsContent>
 
           <TabsContent value="products">
             <div className="flex justify-between items-center mb-6">

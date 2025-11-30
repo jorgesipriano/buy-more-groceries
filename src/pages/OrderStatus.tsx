@@ -37,6 +37,36 @@ const OrderStatus = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.email) {
+      setUserEmail(session.user.email);
+      fetchUserOrders(session.user.email);
+    }
+  };
+
+  const fetchUserOrders = async (email: string) => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("customer_email", email)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching orders:", error);
+    } else {
+      setOrders(data || []);
+      setSearched(true);
+    }
+    setLoading(false);
+  };
 
   const searchOrders = async () => {
     if (!phone.trim()) {
@@ -94,30 +124,36 @@ const OrderStatus = () => {
       <main className="container px-4 py-8 relative z-10">
         <div className="mx-auto max-w-2xl space-y-6">
           <div className="text-center">
-            <h1 className="text-3xl font-bold mb-2">Status do Pedido</h1>
-            <p className="text-muted-foreground">Consulte o status dos seus pedidos</p>
+            <h1 className="text-3xl font-bold mb-2">
+              {userEmail ? "Meus Pedidos" : "Status do Pedido"}
+            </h1>
+            <p className="text-muted-foreground">
+              {userEmail ? `Pedidos associados a ${userEmail}` : "Consulte o status dos seus pedidos"}
+            </p>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Consultar Pedidos</CardTitle>
-              <CardDescription>Digite seu telefone para ver seus pedidos</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  type="tel"
-                  placeholder="(00) 00000-0000"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && searchOrders()}
-                />
-                <Button onClick={searchOrders} disabled={loading}>
-                  {loading ? "Buscando..." : "Buscar"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {!userEmail && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Consultar Pedidos</CardTitle>
+                <CardDescription>Digite seu telefone para ver seus pedidos</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    type="tel"
+                    placeholder="(00) 00000-0000"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && searchOrders()}
+                  />
+                  <Button onClick={searchOrders} disabled={loading}>
+                    {loading ? "Buscando..." : "Buscar"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {searched && orders.length > 0 && (
             <div className="space-y-4">

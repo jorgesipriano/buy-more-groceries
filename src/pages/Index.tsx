@@ -41,7 +41,13 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeType, setActiveType] = useState<"supermarket" | "snacks">("supermarket");
+  const [activeType, setActiveType] = useState<"promotions" | "supermarket" | "snacks">("promotions");
+
+  const SNACK_KEYWORDS = ["lanche", "hambúrguer", "pizza", "hot dog", "cachorro quente", "macarrão", "bebida", "combo", "sobremesa"];
+
+  const isSnackCategory = (name: string) => {
+    return SNACK_KEYWORDS.some(keyword => name.toLowerCase().includes(keyword));
+  };
 
   useEffect(() => {
     fetchCategories();
@@ -223,165 +229,40 @@ const Index = () => {
       toast({
         title: "Erro ao finalizar pedido",
         description: error.message || "Erro desconhecido. Verifique o console.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory =
-      selectedCategory === "all"
-        ? categories.find(c => c.id === product.category_id)?.type === activeType
-        : product.category_id === selectedCategory;
-    const matchesSearch =
-      searchQuery === "" ||
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-
-  const displayedCategories = categories.filter(c => (c.type || 'supermarket') === activeType);
-
-  const total = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20" >
-      <PromoBanner />
-
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container px-4 py-3">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="Buy More" className="h-12 w-auto" />
-            </div>
-            <div className="flex items-center gap-2">
-              {isAdmin && (
-                <NavLink to="/admin-panel">
-                  <Button variant="outline" size="sm">
-                    <Shield className="h-4 w-4 mr-1" />
-                    Admin
-                  </Button>
-                </NavLink>
-              )}
-              <NavLink to="/order-status">
-                <Button variant="outline" size="sm" className="animate-pulse">
-                  <ClipboardList className="h-4 w-4 mr-1" />
-                  Status do Pedido
-                </Button>
-              </NavLink>
-              <Cart
-                items={cartItems}
-                onUpdateQuantity={updateCartQuantity}
-                onRemoveItem={removeFromCart}
-                onCheckout={() => setCheckoutOpen(true)}
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-center mb-6">
-            <div className="bg-muted p-1 rounded-full flex gap-2">
-              <Button
-                variant={activeType === "supermarket" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => {
-                  setActiveType("supermarket");
-                  setSelectedCategory("all");
-                }}
-                className="rounded-full px-6"
-              >
-                <ShoppingBasket className="w-4 h-4 mr-2" />
-                Mercado
-              </Button>
-              <Button
-                variant={activeType === "snacks" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => {
-                  setActiveType("snacks");
-                  setSelectedCategory("all");
-                }}
-                className="rounded-full px-6"
-              >
-                <Utensils className="w-4 h-4 mr-2" />
-                Lanches
-              </Button>
-            </div>
-          </div>
-
-          <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-3">
-            <TabsList className="flex h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
-              <TabsTrigger
-                value="all"
-                className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-              >
-                Todos
-              </TabsTrigger>
-              {displayedCategories.map((category) => (
-                <TabsTrigger
-                  key={category.id}
-                  value={category.id}
-                  className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  {category.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Buscar produtos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+            {
+          filteredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              id={product.id}
+              name={product.name}
+              description={product.description || undefined}
+              price={product.price}
+              imageUrl={product.image_url || undefined}
+              unit={product.unit}
+              stock={product.stock}
+              onAddToCart={(quantity) => addToCart(product.id, quantity)}
             />
-          </div>
-        </div>
-      </header>
-      <main className="container px-4 py-8">
-        <div className="mb-8">
-          <PromoCarousel />
-        </div>
-        <h2 className="mb-6 text-3xl font-bold">Nossos Produtos</h2>
-        {loading ? (
-          <div className="flex min-h-[400px] items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                name={product.name}
-                description={product.description || undefined}
-                price={product.price}
-                imageUrl={product.image_url || undefined}
-                unit={product.unit}
-                stock={product.stock}
-                onAddToCart={(quantity) => addToCart(product.id, quantity)}
-              />
-            ))}
-          </div>
+          ))
+        }
+          </div >
         )}
-        {!loading && filteredProducts.length === 0 && (
-          <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 text-center">
-            <p className="text-lg font-semibold">Nenhum produto encontrado</p>
-            <p className="text-sm text-muted-foreground">
-              Tente selecionar outra categoria
-            </p>
-          </div>
-        )}
-      </main>
-      <CheckoutDialog
-        open={checkoutOpen}
-        onClose={() => setCheckoutOpen(false)}
-        total={total}
-        onConfirm={handleCheckout}
-      />
+{
+  !loading && filteredProducts.length === 0 && (
+    <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 text-center">
+      <p className="text-lg font-semibold">Nenhum produto encontrado</p>
+      <p className="text-sm text-muted-foreground">
+        Tente selecionar outra categoria
+      </p>
+    </div>
+  )
+}
+      </main >
+  <CheckoutDialog
+    open={checkoutOpen}
+    onClose={() => setCheckoutOpen(false)}
+    total={total}
+    onConfirm={handleCheckout}
+  />
     </div >
   );
 };

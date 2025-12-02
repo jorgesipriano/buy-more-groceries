@@ -27,7 +27,13 @@ export function PromotionList({ onEdit, refreshKey }: PromotionListProps) {
     setLoading(true);
     const { data, error } = await supabase
       .from("promotions")
-      .select("*")
+      .select(`
+        *,
+        products (
+          name,
+          price
+        )
+      `)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -97,11 +103,19 @@ export function PromotionList({ onEdit, refreshKey }: PromotionListProps) {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm text-muted-foreground mb-2">
               {promotion.description || "Sem descrição"}
             </p>
-            {promotion.discount_percentage && (
-              <p className="text-xl font-bold text-primary mb-4">
+            {promotion.product_id && (promotion as any).products && (
+              <div className="bg-accent/20 p-3 rounded-md mb-3">
+                <p className="text-sm font-semibold">{(promotion as any).products.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {promotion.quantity}x por R$ {promotion.special_price?.toFixed(2)}
+                </p>
+              </div>
+            )}
+            {!promotion.product_id && promotion.discount_percentage && (
+              <p className="text-xl font-bold text-primary mb-3">
                 {promotion.discount_percentage}% OFF
               </p>
             )}

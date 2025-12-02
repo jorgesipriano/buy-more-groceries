@@ -172,6 +172,9 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          product_id: string | null
+          quantity: number | null
+          special_price: number | null
           start_date: string | null
           title: string
         }
@@ -183,6 +186,9 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          product_id?: string | null
+          quantity?: number | null
+          special_price?: number | null
           start_date?: string | null
           title: string
         }
@@ -194,10 +200,21 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          product_id?: string | null
+          quantity?: number | null
+          special_price?: number | null
           start_date?: string | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "promotions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

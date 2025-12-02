@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Plus, Home } from "lucide-react";
+import { LogOut, Plus, Home, Database } from "lucide-react";
 import { ProductList } from "@/components/admin/ProductList";
 import { ProductDialog } from "@/components/admin/ProductDialog";
 import { PromotionList } from "@/components/admin/PromotionList";
@@ -100,6 +100,51 @@ export default function Admin() {
   const handleCreatePromotion = () => {
     setEditingPromotion(null);
     setPromotionDialogOpen(true);
+    setPromotionDialogOpen(true);
+  };
+
+  const handleSeedPromotions = async () => {
+    const promotionsToSeed = [
+      {
+        title: "Combo Arroz e Feijão",
+        description: "O básico que funciona",
+        special_price: 40,
+        is_active: true,
+      },
+      {
+        title: "Lanche Completo",
+        description: "Tudo que você precisa",
+        special_price: 50,
+        is_active: true,
+      },
+      {
+        title: "Combo Dog + Bebida",
+        description: "Cachorro quente com refrigerante",
+        special_price: 25,
+        is_active: true,
+      }
+    ];
+
+    try {
+      const { error } = await supabase
+        .from("promotions")
+        .insert(promotionsToSeed);
+
+      if (error) throw error;
+
+      toast({
+        title: "Promoções criadas!",
+        description: "3 promoções foram adicionadas com sucesso.",
+      });
+      setRefreshKey(prev => prev + 1);
+    } catch (error: any) {
+      console.error("Error seeding promotions:", error);
+      toast({
+        title: "Erro ao criar promoções",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -169,6 +214,10 @@ export default function Admin() {
               <Button onClick={handleCreatePromotion}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Promoção
+              </Button>
+              <Button onClick={handleSeedPromotions} variant="secondary" className="ml-2">
+                <Database className="h-4 w-4 mr-2" />
+                Seed Promoções
               </Button>
             </div>
             <PromotionList onEdit={handleEditPromotion} refreshKey={refreshKey} />

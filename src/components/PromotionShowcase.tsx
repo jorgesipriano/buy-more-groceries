@@ -14,6 +14,7 @@ interface Promotion {
   image_url: string | null;
   start_date: string | null;
   end_date: string | null;
+  special_price?: number;
 }
 
 export function PromotionShowcase() {
@@ -63,8 +64,8 @@ export function PromotionShowcase() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {promotions.map((promo) => (
-          <Card 
-            key={promo.id} 
+          <Card
+            key={promo.id}
             className="group overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 hover:border-primary/50"
           >
             {promo.image_url && (
@@ -76,7 +77,7 @@ export function PromotionShowcase() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 {promo.discount_percentage && (
-                  <Badge 
+                  <Badge
                     className="absolute top-4 right-4 bg-primary text-primary-foreground font-bold text-lg px-4 py-2 shadow-lg"
                   >
                     <TrendingDown className="h-4 w-4 mr-1 inline" />
@@ -85,7 +86,7 @@ export function PromotionShowcase() {
                 )}
               </div>
             )}
-            
+
             <CardContent className="p-6 space-y-4">
               <div>
                 <h3 className="text-2xl font-bold mb-2 group-hover:text-primary transition-colors">
@@ -95,6 +96,13 @@ export function PromotionShowcase() {
                   <p className="text-muted-foreground leading-relaxed">
                     {promo.description}
                   </p>
+                )}
+                {promo.special_price && (
+                  <div className="mt-2">
+                    <span className="text-2xl font-bold text-primary">
+                      R$ {promo.special_price.toFixed(2).replace('.', ',')}
+                    </span>
+                  </div>
                 )}
               </div>
 

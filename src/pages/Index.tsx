@@ -45,10 +45,12 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeType, setActiveType] = useState<"promotions" | "supermarket" | "snacks">("promotions");
 
-  const SNACK_KEYWORDS = ["lanche", "hambúrguer", "pizza", "hot dog", "cachorro quente", "macarrão", "bebida", "combo", "sobremesa"];
+  const SNACK_KEYWORDS = ["lanche", "hambúrguer", "pizza", "hot dog", "cachorro quente", "macarrão", "combo", "sobremesa"];
 
   const isSnackCategory = (name: string) => {
-    return SNACK_KEYWORDS.some(keyword => name.toLowerCase().includes(keyword));
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes("leite")) return false;
+    return SNACK_KEYWORDS.some(keyword => lowerName.includes(keyword));
   };
 
   useEffect(() => {
@@ -117,7 +119,7 @@ const Index = () => {
     setLoading(false);
   };
 
-  const addToCart = (productId: string, quantity: number) => {
+  const addToCart = (productId: string, quantity: number, ingredients?: string[]) => {
     const product = products.find((p) => p.id === productId);
     if (!product) return;
     setCartItems((prev) => {
@@ -129,6 +131,21 @@ const Index = () => {
             : item
         );
       }
+      // Check if item with same ingredients exists
+      const existingWithIngredients = prev.find(
+        (item) =>
+          item.id === productId &&
+          JSON.stringify(item.ingredients?.sort()) === JSON.stringify(ingredients?.sort())
+      );
+
+      if (existingWithIngredients) {
+        return prev.map((item) =>
+          item === existingWithIngredients
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
+      }
+
       return [
         ...prev,
         {
@@ -137,6 +154,7 @@ const Index = () => {
           price: product.price,
           quantity,
           unit: product.unit,
+          ingredients,
         },
       ];
     });
@@ -185,7 +203,8 @@ const Index = () => {
       const itensFormatados = cartItems.map(item => ({
         name: item.name,
         quantity: item.quantity,
-        price: item.price
+        price: item.price,
+        ingredients: item.ingredients
       }));
 
       const webhookData = {

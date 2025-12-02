@@ -10,6 +10,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   unit: string;
+  ingredients?: string[];
 }
 
 interface CartProps {
@@ -26,8 +27,8 @@ export function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout }: Cart
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button 
-          size="lg" 
+        <Button
+          size="lg"
           className="fixed bottom-6 right-6 z-50 h-14 gap-2 rounded-full bg-gradient-to-r from-primary to-primary/90 px-6 shadow-2xl transition-all hover:scale-105 hover:shadow-xl"
           data-cart
         >
@@ -44,7 +45,7 @@ export function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout }: Cart
         <SheetHeader>
           <SheetTitle className="text-2xl">Seu Carrinho</SheetTitle>
         </SheetHeader>
-        
+
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
             <div className="rounded-full bg-muted p-6">
@@ -65,6 +66,16 @@ export function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout }: Cart
                     <p className="text-sm text-muted-foreground">
                       R$ {item.price.toFixed(2).replace('.', ',')} / {item.unit}
                     </p>
+                    {item.ingredients && item.ingredients.length > 0 && (
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        <p className="font-medium">Ingredientes:</p>
+                        <ul className="list-disc pl-4">
+                          {item.ingredients.map((ing, idx) => (
+                            <li key={idx}>{ing}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     <div className="mt-2 flex items-center gap-2">
                       <Button
                         size="icon"
@@ -101,7 +112,7 @@ export function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout }: Cart
                 </div>
               ))}
             </div>
-            
+
             <div className="space-y-4 border-t pt-4">
               <div className="flex items-center justify-between text-lg">
                 <span className="font-semibold">Total:</span>
@@ -109,8 +120,8 @@ export function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout }: Cart
                   R$ {total.toFixed(2).replace('.', ',')}
                 </span>
               </div>
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="w-full bg-gradient-to-r from-secondary to-secondary/90 text-lg font-semibold hover:shadow-lg"
                 onClick={onCheckout}
               >

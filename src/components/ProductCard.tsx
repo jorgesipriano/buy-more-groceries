@@ -1,8 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Plus, Minus } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Settings2 } from "lucide-react";
 import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface ProductCardProps {
   id: string;
@@ -12,24 +21,63 @@ interface ProductCardProps {
   imageUrl?: string;
   unit: string;
   stock: number;
-  onAddToCart: (quantity: number) => void;
+  onAddToCart: (quantity: number, ingredients?: string[]) => void;
 }
 
-export function ProductCard({ 
-  name, 
-  description, 
-  price, 
-  imageUrl, 
-  unit, 
+export function ProductCard({
+  name,
+  description,
+  price,
+  imageUrl,
+  unit,
   stock,
-  onAddToCart 
+  onAddToCart
 }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
+  const [showCustomization, setShowCustomization] = useState(false);
 
-  const handleAdd = () => {
+  const isHotDog = name.toLowerCase().includes("hot dog") || name.toLowerCase().includes("cachorro quente");
+
+  const DEFAULT_INGREDIENTS = [
+    "Pão",
+    "Salsicha",
+    "Molho",
+    "Milho",
+    "Ervilha",
+    "Batata Palha",
+    "Queijo Ralado",
+    "Maionese",
+    "Ketchup",
+    "Mostarda"
+  ];
+
+  const [selectedIngredients, setSelectedIngredients] = useState<string[]>(DEFAULT_INGREDIENTS);
+
+  const toggleIngredient = (ingredient: string) => {
+    setSelectedIngredients(prev =>
+      prev.includes(ingredient)
+        ? prev.filter(i => i !== ingredient)
+        : [...prev, ingredient]
+    );
+  };
+
+  const handleAddToCartClick = () => {
+    if (isHotDog) {
+      setShowCustomization(true);
+    } else {
+      handleAdd();
+    }
+  };
+
+  const handleCustomizationConfirm = () => {
+    setShowCustomization(false);
+    handleAdd(selectedIngredients);
+  };
+
+  const handleAdd = (ingredients?: string[]) => {
     setIsAdding(true);
-    onAddToCart(quantity);
+    onAddToCart(quantity, ingredients);
     setTimeout(() => {
       setIsAdding(false);
       setQuantity(1);
@@ -52,8 +100,8 @@ export function ProductCard({
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-[var(--shadow-hover)]">
       <div className="aspect-square overflow-hidden bg-muted">
         {imageUrl ? (
-          <img 
-            src={imageUrl} 
+          <img
+            src={imageUrl}
             alt={name}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
@@ -104,14 +152,40 @@ export function ProductCard({
             <Plus className="h-4 w-4" />
           </Button>
         </div>
-        <Button 
-          onClick={handleAdd}
+        <Button
+          onClick={handleAddToCartClick}
           disabled={stock === 0 || isAdding}
           className="flex-1 bg-gradient-to-r from-primary to-primary/90 font-semibold transition-all hover:shadow-lg"
         >
           {isAdding ? "Adicionado!" : stock === 0 ? "Sem estoque" : "Adicionar"}
         </Button>
       </CardFooter>
+
+      <Dialog open={showCustomization} onOpenChange={setShowCustomization}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Personalizar {name}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              {DEFAULT_INGREDIENTS.map((ingredient) => (
+                <div key={ingredient} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`ingredient-${ingredient}`}
+                    checked={selectedIngredients.includes(ingredient)}
+                    onCheckedChange={() => toggleIngredient(ingredient)}
+                  />
+                  <Label htmlFor={`ingredient-${ingredient}`}>{ingredient}</Label>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCustomization(false)}>Cancelar</Button>
+            <Button onClick={handleCustomizationConfirm}>Confirmar e Adicionar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

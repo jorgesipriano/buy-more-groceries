@@ -5,6 +5,7 @@ import { CheckoutDialog, CheckoutData } from "@/components/CheckoutDialog";
 import { PromoCarousel } from "@/components/PromoCarousel";
 import { PromoBanner } from "@/components/PromoBanner";
 import { ProductPromotions } from "@/components/ProductPromotions";
+import { PromotionShowcase } from "@/components/PromotionShowcase";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -315,8 +316,8 @@ const Index = () => {
         </div>
 
         {activeType === "promotions" && (
-          <div className="mt-8 space-y-8">
-            <PromoBanner />
+          <div className="mt-8 space-y-12">
+            <PromotionShowcase />
             <ProductPromotions onAddToCart={addToCart} />
           </div>
         )}

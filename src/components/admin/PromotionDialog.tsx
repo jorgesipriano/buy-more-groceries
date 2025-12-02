@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
@@ -22,13 +23,31 @@ interface PromotionDialogProps {
 export function PromotionDialog({ open, onOpenChange, promotion, onSuccess }: PromotionDialogProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState<Array<{ id: string; name: string; price: number }>>([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     discount_percentage: 0,
     image_url: "",
     is_active: true,
+    product_id: "",
+    special_price: 0,
+    quantity: 1,
   });
+
+  useEffect(() => {
+    if (open) {
+      fetchProducts();
+    }
+  }, [open]);
+
+  const fetchProducts = async () => {
+    const { data } = await supabase
+      .from("products")
+      .select("id, name, price")
+      .order("name");
+    if (data) setProducts(data);
+  };
 
   useEffect(() => {
     if (promotion) {
@@ -38,6 +57,9 @@ export function PromotionDialog({ open, onOpenChange, promotion, onSuccess }: Pr
         discount_percentage: promotion.discount_percentage || 0,
         image_url: promotion.image_url || "",
         is_active: promotion.is_active ?? true,
+        product_id: promotion.product_id || "",
+        special_price: promotion.special_price || 0,
+        quantity: promotion.quantity || 1,
       });
     } else {
       setFormData({
@@ -46,6 +68,9 @@ export function PromotionDialog({ open, onOpenChange, promotion, onSuccess }: Pr
         discount_percentage: 0,
         image_url: "",
         is_active: true,
+        product_id: "",
+        special_price: 0,
+        quantity: 1,
       });
     }
   }, [promotion, open]);
@@ -55,10 +80,17 @@ export function PromotionDialog({ open, onOpenChange, promotion, onSuccess }: Pr
     setLoading(true);
 
     try {
+      const dataToSave = {
+        ...formData,
+        product_id: formData.product_id || null,
+        special_price: formData.special_price || null,
+        discount_percentage: formData.discount_percentage || null,
+      };
+
       if (promotion) {
         const { error } = await supabase
           .from("promotions")
-          .update(formData)
+          .update(dataToSave)
           .eq("id", promotion.id);
 
         if (error) throw error;
@@ -70,7 +102,7 @@ export function PromotionDialog({ open, onOpenChange, promotion, onSuccess }: Pr
       } else {
         const { error } = await supabase
           .from("promotions")
-          .insert(formData);
+          .insert(dataToSave);
 
         if (error) throw error;
 
@@ -111,6 +143,7 @@ export function PromotionDialog({ open, onOpenChange, promotion, onSuccess }: Pr
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
+              placeholder="Ex: Abacaxi em Promoção"
             />
           </div>
 
@@ -121,23 +154,75 @@ export function PromotionDialog({ open, onOpenChange, promotion, onSuccess }: Pr
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
+              placeholder="Descrição da promoção..."
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="discount">Desconto (%)</Label>
-            <Input
-              id="discount"
-              type="number"
-              min="0"
-              max="100"
-              value={formData.discount_percentage}
-              onChange={(e) => setFormData({ ...formData, discount_percentage: parseInt(e.target.value) || 0 })}
-            />
+            <Label htmlFor="product">Produto (opcional)</Label>
+            <Select
+              value={formData.product_id}
+              onValueChange={(value) => setFormData({ ...formData, product_id: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um produto" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Promoção geral (sem produto)</SelectItem>
+                {products.map((product) => (
+                  <SelectItem key={product.id} value={product.id}>
+                    {product.name} - R$ {product.price.toFixed(2)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
+          {formData.product_id && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="quantity">Quantidade</Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  min="1"
+                  value={formData.quantity}
+                  onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
+                  placeholder="Ex: 2 (para 2 unidades)"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="special_price">Preço Promocional (R$)</Label>
+                <Input
+                  id="special_price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.special_price}
+                  onChange={(e) => setFormData({ ...formData, special_price: parseFloat(e.target.value) || 0 })}
+                  placeholder="Ex: 50.00"
+                />
+              </div>
+            </>
+          )}
+
+          {!formData.product_id && (
+            <div className="space-y-2">
+              <Label htmlFor="discount">Desconto (%)</Label>
+              <Input
+                id="discount"
+                type="number"
+                min="0"
+                max="100"
+                value={formData.discount_percentage}
+                onChange={(e) => setFormData({ ...formData, discount_percentage: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
-            <Label htmlFor="image">URL da Imagem</Label>
+            <Label htmlFor="image">URL da Imagem (opcional)</Label>
             <Input
               id="image"
               type="url"

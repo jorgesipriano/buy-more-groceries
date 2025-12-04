@@ -75,7 +75,7 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
         <DialogHeader>
           <DialogTitle className="text-2xl">Finalizar Pedido</DialogTitle>
           <DialogDescription>
-            Preencha seus dados para concluir a compra.
+            Escolha a forma de pagamento e o agendamento da entrega.
           </DialogDescription>
         </DialogHeader>
 

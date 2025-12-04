@@ -47,8 +47,15 @@ const Index = () => {
 
   const SNACK_KEYWORDS = ["lanche", "hambúrguer", "pizza", "hot dog", "cachorro quente", "macarrão", "combo", "sobremesa"];
 
-  const isSnackCategory = (name: string) => {
-    const lowerName = name.toLowerCase();
+  const isSnackCategory = (category: Category) => {
+    if (category.slug.startsWith("snack-")) return true;
+    if (category.slug.startsWith("market-")) return false;
+
+    const lowerName = category.name.toLowerCase();
+
+    // Fix for Drinks: "Bebida" (singular) is Snack, "Bebidas" (plural) is Market
+    if (lowerName === "bebida") return true;
+
     // Strict filter: Must match a keyword AND not contain "leite" (just to be safe, though market filter handles the rest)
     if (lowerName.includes("leite")) return false;
     return SNACK_KEYWORDS.some(keyword => lowerName.includes(keyword));
@@ -120,7 +127,7 @@ const Index = () => {
     setLoading(false);
   };
 
-  const addToCart = (productId: string, quantity: number, ingredients?: string[], priceOverride?: number, nameOverride?: string) => {
+  const addToCart = (productId: string, quantity: number, ingredients?: string[], priceOverride?: number, nameOverride?: string, observation?: string) => {
     const product = products.find((p) => p.id === productId);
     if (!product) return;
     setCartItems((prev) => {
@@ -157,6 +164,7 @@ const Index = () => {
           unit: product.unit,
           ingredients,
           originalPrice: product.price,
+          observation,
         },
       ];
     });
@@ -206,7 +214,8 @@ const Index = () => {
         name: item.name,
         quantity: item.quantity,
         price: item.price,
-        ingredients: item.ingredients
+        ingredients: item.ingredients,
+        observation: item.observation
       }));
 
       const webhookData = {
@@ -267,7 +276,7 @@ const Index = () => {
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
     const category = categories.find((c) => c.id === product.category_id);
-    const isSnack = category ? isSnackCategory(category.name) : false;
+    const isSnack = category ? isSnackCategory(category) : false;
 
     if (activeType === "promotions") return matchesCategory && matchesSearch;
     if (activeType === "snacks") return isSnack && matchesCategory && matchesSearch;
@@ -275,8 +284,8 @@ const Index = () => {
     return false;
   });
 
-  const snackCategories = categories.filter((c) => isSnackCategory(c.name));
-  const supermarketCategories = categories.filter((c) => !isSnackCategory(c.name));
+  const snackCategories = categories.filter((c) => isSnackCategory(c));
+  const supermarketCategories = categories.filter((c) => !isSnackCategory(c));
 
   if (loading) {
     return (
@@ -366,7 +375,7 @@ const Index = () => {
                     onClick={() => setSelectedCategory(category.id)}
                     className="whitespace-nowrap"
                   >
-                    {category.name === "Bebidas" ? "Bebida" : category.name}
+                    {category.name}
                   </Button>
                 )
               )}
@@ -399,7 +408,8 @@ const Index = () => {
                 imageUrl={product.image_url || undefined}
                 unit={product.unit}
                 stock={product.stock}
-                onAddToCart={(quantity) => addToCart(product.id, quantity)}
+                onAddToCart={(quantity, ingredients, observation) => addToCart(product.id, quantity, ingredients, undefined, undefined, observation)}
+                isSnack={categories.find(c => c.id === product.category_id) ? isSnackCategory(categories.find(c => c.id === product.category_id)!) : false}
               />
             ))}
           </div>

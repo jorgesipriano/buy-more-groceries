@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ProductCardProps {
   id: string;
@@ -21,7 +22,8 @@ interface ProductCardProps {
   imageUrl?: string;
   unit: string;
   stock: number;
-  onAddToCart: (quantity: number, ingredients?: string[]) => void;
+  onAddToCart: (quantity: number, ingredients?: string[], observation?: string) => void;
+  isSnack?: boolean;
 }
 
 export function ProductCard({
@@ -31,11 +33,13 @@ export function ProductCard({
   imageUrl,
   unit,
   stock,
-  onAddToCart
+  onAddToCart,
+  isSnack = false
 }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [showCustomization, setShowCustomization] = useState(false);
+  const [observation, setObservation] = useState("");
 
   const isHotDog = name.toLowerCase().includes("hot dog") || name.toLowerCase().includes("cachorro quente");
 
@@ -63,7 +67,7 @@ export function ProductCard({
   };
 
   const handleAddToCartClick = () => {
-    if (isHotDog) {
+    if (isSnack || isHotDog) {
       setShowCustomization(true);
     } else {
       handleAdd();
@@ -72,12 +76,13 @@ export function ProductCard({
 
   const handleCustomizationConfirm = () => {
     setShowCustomization(false);
-    handleAdd(selectedIngredients);
+    handleAdd(isHotDog ? selectedIngredients : undefined, observation);
+    setObservation(""); // Reset observation after adding
   };
 
-  const handleAdd = (ingredients?: string[]) => {
+  const handleAdd = (ingredients?: string[], obs?: string) => {
     setIsAdding(true);
-    onAddToCart(quantity, ingredients);
+    onAddToCart(quantity, ingredients, obs);
     setTimeout(() => {
       setIsAdding(false);
       setQuantity(1);
@@ -167,17 +172,29 @@ export function ProductCard({
             <DialogTitle>Personalizar {name}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              {DEFAULT_INGREDIENTS.map((ingredient) => (
-                <div key={ingredient} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`ingredient-${ingredient}`}
-                    checked={selectedIngredients.includes(ingredient)}
-                    onCheckedChange={() => toggleIngredient(ingredient)}
-                  />
-                  <Label htmlFor={`ingredient-${ingredient}`}>{ingredient}</Label>
-                </div>
-              ))}
+            {isHotDog && (
+              <div className="grid grid-cols-2 gap-4">
+                {DEFAULT_INGREDIENTS.map((ingredient) => (
+                  <div key={ingredient} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`ingredient-${ingredient}`}
+                      checked={selectedIngredients.includes(ingredient)}
+                      onCheckedChange={() => toggleIngredient(ingredient)}
+                    />
+                    <Label htmlFor={`ingredient-${ingredient}`}>{ingredient}</Label>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="observation">Observações</Label>
+              <Textarea
+                id="observation"
+                placeholder="Ex: Sem cebola, bem passado..."
+                value={observation}
+                onChange={(e) => setObservation(e.target.value)}
+              />
             </div>
           </div>
           <DialogFooter>

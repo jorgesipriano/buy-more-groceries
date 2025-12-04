@@ -10,6 +10,7 @@ import { PromotionList } from "@/components/admin/PromotionList";
 import { PromotionDialog } from "@/components/admin/PromotionDialog";
 import { OrderList } from "@/components/admin/OrderList";
 import { CategoryList } from "@/components/admin/CategoryList";
+import { UserList } from "@/components/admin/UserList";
 import { NavLink } from "@/components/NavLink";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Tables } from "@/integrations/supabase/types";
@@ -187,7 +188,12 @@ export default function Admin() {
             <TabsTrigger value="categories">Categorias</TabsTrigger>
             <TabsTrigger value="promotions">Promoções</TabsTrigger>
             <TabsTrigger value="orders">Pedidos</TabsTrigger>
+            <TabsTrigger value="users">Usuários</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="users">
+            <UserList />
+          </TabsContent>
 
           <TabsContent value="orders">
             <OrderList />

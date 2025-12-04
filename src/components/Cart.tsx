@@ -12,6 +12,7 @@ export interface CartItem {
   unit: string;
   ingredients?: string[];
   originalPrice?: number;
+  observation?: string;
 }
 
 interface CartProps {
@@ -75,6 +76,12 @@ export function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout }: Cart
                             <li key={idx}>{ing}</li>
                           ))}
                         </ul>
+                      </div>
+                    )}
+                    {item.observation && (
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        <p className="font-medium">Observação:</p>
+                        <p className="italic">{item.observation}</p>
                       </div>
                     )}
                     <div className="mt-2 flex items-center gap-2">

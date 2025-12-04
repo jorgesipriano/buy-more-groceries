@@ -40,7 +40,7 @@ export default function Admin() {
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) {
-      navigate("/admin");
+      navigate("/auth");
       return;
     }
 

@@ -11,6 +11,9 @@ export interface CartItem {
   quantity: number;
   unit: string;
   ingredients?: string[];
+  productId?: string;
+  isCombo?: boolean;
+  comboQuantity?: number;
 }
 
 interface CartProps {

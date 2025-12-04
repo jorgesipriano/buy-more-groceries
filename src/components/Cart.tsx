@@ -11,6 +11,7 @@ export interface CartItem {
   quantity: number;
   unit: string;
   ingredients?: string[];
+  originalPrice?: number;
 }
 
 interface CartProps {

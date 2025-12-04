@@ -24,7 +24,7 @@ interface ProductPromotion {
 }
 
 interface ProductPromotionsProps {
-  onAddToCart: (productId: string, quantity: number) => void;
+  onAddToCart: (productId: string, quantity: number, ingredients?: string[], priceOverride?: number, nameOverride?: string) => void;
 }
 
 export function ProductPromotions({ onAddToCart }: ProductPromotionsProps) {
@@ -70,7 +70,7 @@ export function ProductPromotions({ onAddToCart }: ProductPromotionsProps) {
         <Tag className="h-5 w-5 text-primary" />
         <h2 className="text-2xl font-bold">Promoções Especiais</h2>
       </div>
-      
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {promotions.map((promo) => {
           const discount = calculateDiscount(
@@ -78,7 +78,7 @@ export function ProductPromotions({ onAddToCart }: ProductPromotionsProps) {
             promo.special_price,
             promo.quantity
           );
-          
+
           return (
             <Card key={promo.id} className="overflow-hidden hover:shadow-lg transition-shadow">
               <div className="relative">
@@ -89,13 +89,13 @@ export function ProductPromotions({ onAddToCart }: ProductPromotionsProps) {
                     className="w-full h-48 object-cover"
                   />
                 )}
-                <Badge 
+                <Badge
                   className="absolute top-2 right-2 bg-primary text-primary-foreground font-bold"
                 >
                   {discount}% OFF
                 </Badge>
               </div>
-              
+
               <CardContent className="p-4 space-y-3">
                 <div>
                   <h3 className="font-bold text-lg">{promo.title}</h3>
@@ -123,10 +123,16 @@ export function ProductPromotions({ onAddToCart }: ProductPromotionsProps) {
 
                 <Button
                   onClick={() => {
-                    onAddToCart(promo.products.id, promo.quantity);
+                    onAddToCart(
+                      promo.products.id,
+                      1, // Quantity is always 1 for the combo package
+                      undefined,
+                      promo.special_price, // Price override
+                      promo.title // Name override
+                    );
                     toast({
                       title: "Promoção adicionada!",
-                      description: `${promo.quantity}x ${promo.products.name}`,
+                      description: `${promo.title}`,
                     });
                   }}
                   className="w-full"

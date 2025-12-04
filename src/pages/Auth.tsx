@@ -10,7 +10,8 @@ import { ShoppingCart } from "lucide-react";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export default function Auth() {
         .eq("user_id", session.user.id)
         .eq("role", "admin")
         .single();
-      
+
       if (data) {
         navigate("/admin-panel");
       } else {
@@ -51,9 +52,12 @@ export default function Auth() {
     setLoading(true);
 
     try {
+      // Generate dummy email from phone
+      const dummyEmail = `${phone.replace(/\D/g, "")}@temp.com`;
+
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: dummyEmail,
           password,
         });
 
@@ -65,10 +69,13 @@ export default function Auth() {
         });
       } else {
         const { error } = await supabase.auth.signUp({
-          email,
+          email: dummyEmail,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/admin`,
+            data: {
+              full_name: fullName,
+              phone: phone,
+            },
           },
         });
 
@@ -105,14 +112,27 @@ export default function Auth() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAuth} className="space-y-4">
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome Completo</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Seu Nome"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
+              </div>
+            )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="phone">Telefone</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="phone"
+                type="tel"
+                placeholder="(00) 00000-0000"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 required
               />
             </div>

@@ -49,6 +49,7 @@ const Index = () => {
 
   const isSnackCategory = (name: string) => {
     const lowerName = name.toLowerCase();
+    // Strict filter: Must match a keyword AND not contain "leite" (just to be safe, though market filter handles the rest)
     if (lowerName.includes("leite")) return false;
     return SNACK_KEYWORDS.some(keyword => lowerName.includes(keyword));
   };
@@ -119,7 +120,7 @@ const Index = () => {
     setLoading(false);
   };
 
-  const addToCart = (productId: string, quantity: number, ingredients?: string[]) => {
+  const addToCart = (productId: string, quantity: number, ingredients?: string[], priceOverride?: number, nameOverride?: string) => {
     const product = products.find((p) => p.id === productId);
     if (!product) return;
     setCartItems((prev) => {
@@ -150,11 +151,12 @@ const Index = () => {
         ...prev,
         {
           id: product.id,
-          name: product.name,
-          price: product.price,
+          name: nameOverride || product.name,
+          price: priceOverride !== undefined ? priceOverride : product.price,
           quantity,
           unit: product.unit,
           ingredients,
+          originalPrice: product.price,
         },
       ];
     });
@@ -188,10 +190,10 @@ const Index = () => {
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
-          customer_name: data.customerName,
+          customer_name: "Cliente da República",
           customer_email: "cliente@sem-email.com",
-          customer_phone: data.customerPhone,
-          customer_address: data.customerAddress,
+          customer_phone: "Não informado",
+          customer_address: "Endereço da República",
           payment_method: data.paymentMethod,
           total,
         })
@@ -209,14 +211,16 @@ const Index = () => {
 
       const webhookData = {
         id: order.id,
-        customer_name: data.customerName,
+        customer_name: "Cliente da República", // Placeholder or from Auth context if available
         customer_email: "cliente@sem-email.com",
-        customer_phone: data.customerPhone,
-        customer_address: data.customerAddress,
+        customer_phone: "Não informado", // Placeholder
+        customer_address: "Endereço da República", // Placeholder
         customer_complement: "",
         payment_method: data.paymentMethod,
         total_price: total,
-        items: itensFormatados
+        items: itensFormatados,
+        scheduled_date: data.scheduledDate,
+        scheduled_time: data.scheduledTime
       };
 
       const webhookResult = await sendOrderNotification(webhookData);
@@ -362,7 +366,7 @@ const Index = () => {
                     onClick={() => setSelectedCategory(category.id)}
                     className="whitespace-nowrap"
                   >
-                    {category.name}
+                    {category.name === "Bebidas" ? "Bebida" : category.name}
                   </Button>
                 )
               )}

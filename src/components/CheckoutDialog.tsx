@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,9 +13,6 @@ interface CheckoutDialogProps {
 }
 
 export interface CheckoutData {
-  customerName: string;
-  customerPhone: string;
-  customerAddress: string;
   paymentMethod: string;
   scheduledDate: string;
   scheduledTime: string;
@@ -26,9 +22,6 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
   const { toast } = useToast();
   const [availableDates, setAvailableDates] = useState<{ date: string; label: string }[]>([]);
   const [formData, setFormData] = useState<CheckoutData>({
-    customerName: "",
-    customerPhone: "",
-    customerAddress: "",
     paymentMethod: "",
     scheduledDate: "",
     scheduledTime: "",
@@ -64,24 +57,6 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.customerPhone) {
-      toast({
-        title: "Telefone obrigatório",
-        description: "Por favor, preencha o telefone",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.customerAddress) {
-      toast({
-        title: "Endereço obrigatório",
-        description: "Por favor, preencha o endereço de entrega",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!formData.paymentMethod) {
       toast({
         title: "Forma de pagamento obrigatória",
@@ -105,38 +80,6 @@ export function CheckoutDialog({ open, onClose, total, onConfirm }: CheckoutDial
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="phone">Telefone *</Label>
-            <Input
-              id="phone"
-              value={formData.customerPhone}
-              onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-              placeholder="(00) 00000-0000"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome Completo</Label>
-            <Input
-              id="name"
-              value={formData.customerName}
-              onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-              placeholder="Digite seu nome"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address">Endereço de Entrega *</Label>
-            <Input
-              id="address"
-              value={formData.customerAddress}
-              onChange={(e) => setFormData({ ...formData, customerAddress: e.target.value })}
-              placeholder="Rua, Número, Bairro"
-              required
-            />
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="payment">Forma de Pagamento *</Label>
             <Select

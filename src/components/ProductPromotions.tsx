@@ -3,8 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Tag } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 interface ProductPromotion {
   id: string;
@@ -23,13 +21,23 @@ interface ProductPromotion {
   };
 }
 
-interface ProductPromotionsProps {
-  onAddToCart: (productId: string, quantity: number) => void;
+interface ComboAddPayload {
+  promotionId: string;
+  productId: string;
+  productName: string;
+  unit: string;
+  specialPrice: number;
+  quantity: number;
 }
 
-export function ProductPromotions({ onAddToCart }: ProductPromotionsProps) {
+interface ProductPromotionsProps {
+  onAddComboToCart: (combo: ComboAddPayload) => void;
+}
+
+export type { ComboAddPayload };
+
+export function ProductPromotions({ onAddComboToCart }: ProductPromotionsProps) {
   const [promotions, setPromotions] = useState<ProductPromotion[]>([]);
-  const { toast } = useToast();
 
   useEffect(() => {
     fetchPromotions();
@@ -122,13 +130,16 @@ export function ProductPromotions({ onAddToCart }: ProductPromotionsProps) {
                 </div>
 
                 <Button
-                  onClick={() => {
-                    onAddToCart(promo.products.id, promo.quantity);
-                    toast({
-                      title: "Promoção adicionada!",
-                      description: `${promo.quantity}x ${promo.products.name}`,
-                    });
-                  }}
+                  onClick={() =>
+                    onAddComboToCart({
+                      promotionId: promo.id,
+                      productId: promo.products.id,
+                      productName: promo.title || promo.products.name,
+                      unit: promo.products.unit,
+                      specialPrice: promo.special_price,
+                      quantity: promo.quantity,
+                    })
+                  }
                   className="w-full"
                 >
                   <ShoppingCart className="h-4 w-4 mr-2" />

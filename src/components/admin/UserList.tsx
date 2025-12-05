@@ -15,12 +15,11 @@ import { Check, X } from "lucide-react";
 
 interface Profile {
     id: string;
-    full_name: string | null;
-    phone: string | null;
-    house: string | null;
-    room: string | null;
-    approved: boolean | null;
+    full_name: string;
+    phone: string;
+    approved: boolean;
     created_at: string;
+    updated_at: string;
 }
 
 export function UserList() {
@@ -93,7 +92,6 @@ export function UserList() {
                         <TableRow>
                             <TableHead>Nome</TableHead>
                             <TableHead>Telefone</TableHead>
-                            <TableHead>Casa/Quarto</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
@@ -103,10 +101,6 @@ export function UserList() {
                             <TableRow key={profile.id}>
                                 <TableCell className="font-medium">{profile.full_name || "Sem nome"}</TableCell>
                                 <TableCell>{profile.phone || "-"}</TableCell>
-                                <TableCell>
-                                    {profile.house ? `Casa ${profile.house}` : "-"}
-                                    {profile.room ? ` / Quarto ${profile.room}` : ""}
-                                </TableCell>
                                 <TableCell>
                                     <Badge variant={profile.approved ? "default" : "secondary"}>
                                         {profile.approved ? "Aprovado" : "Pendente"}
@@ -135,7 +129,7 @@ export function UserList() {
                         ))}
                         {profiles.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                                     Nenhum usuário encontrado.
                                 </TableCell>
                             </TableRow>

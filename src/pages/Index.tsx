@@ -437,6 +437,7 @@ const Index = () => {
         onClose={() => setCheckoutOpen(false)}
         total={total}
         onConfirm={handleCheckout}
+        orderType={activeType}
       />
     </div>
   );

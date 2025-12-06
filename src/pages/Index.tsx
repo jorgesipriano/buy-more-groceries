@@ -128,26 +128,20 @@ const Index = () => {
 
   const addToCart = (productId: string, quantity: number, ingredients?: string[], priceOverride?: number, nameOverride?: string, observation?: string) => {
     const product = products.find((p) => p.id === productId);
-    if (!product) return;
+    
+    // For combos/promotions, product may not be in the list - use overrides
+    const itemName = nameOverride || product?.name || "Produto";
+    const itemPrice = priceOverride !== undefined ? priceOverride : (product?.price || 0);
+    const itemUnit = product?.unit || "un";
+    
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === productId);
+      // For combos with custom names, use a unique key based on name
+      const itemKey = nameOverride ? `combo-${productId}-${nameOverride}` : productId;
+      
+      const existing = prev.find((item) => item.id === itemKey);
       if (existing) {
         return prev.map((item) =>
-          item.id === productId
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      }
-      // Check if item with same ingredients exists
-      const existingWithIngredients = prev.find(
-        (item) =>
-          item.id === productId &&
-          JSON.stringify(item.ingredients?.sort()) === JSON.stringify(ingredients?.sort())
-      );
-
-      if (existingWithIngredients) {
-        return prev.map((item) =>
-          item === existingWithIngredients
+          item.id === itemKey
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
@@ -156,20 +150,20 @@ const Index = () => {
       return [
         ...prev,
         {
-          id: product.id,
-          name: nameOverride || product.name,
-          price: priceOverride !== undefined ? priceOverride : product.price,
+          id: itemKey,
+          name: itemName,
+          price: itemPrice,
           quantity,
-          unit: product.unit,
+          unit: itemUnit,
           ingredients,
-          originalPrice: product.price,
+          originalPrice: product?.price,
           observation,
         },
       ];
     });
     toast({
       title: "Adicionado ao carrinho!",
-      description: `${quantity}x ${product.name}`,
+      description: `${quantity}x ${itemName}`,
     });
   };
 

@@ -4,7 +4,6 @@ import { Cart, CartItem } from "@/components/Cart";
 import { CheckoutDialog, CheckoutData } from "@/components/CheckoutDialog";
 import { PromoCarousel } from "@/components/PromoCarousel";
 import { PromoBanner } from "@/components/PromoBanner";
-import { ProductPromotions } from "@/components/ProductPromotions";
 import { PromotionShowcase } from "@/components/PromotionShowcase";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -348,9 +347,8 @@ const Index = () => {
         </div>
 
         {activeType === "promotions" && (
-          <div className="mt-8 space-y-12">
-            <PromotionShowcase />
-            <ProductPromotions onAddToCart={addToCart} />
+          <div className="mt-8">
+            <PromotionShowcase onAddToCart={addToCart} />
           </div>
         )}
 
@@ -396,7 +394,7 @@ const Index = () => {
           </>
         )}
 
-        {!loading && filteredProducts.length > 0 && (
+        {!loading && filteredProducts.length > 0 && activeType !== "promotions" && (
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProducts.map((product) => (
               <ProductCard
@@ -415,7 +413,7 @@ const Index = () => {
           </div>
         )}
 
-        {!loading && filteredProducts.length === 0 && (
+        {!loading && filteredProducts.length === 0 && activeType !== "promotions" && (
           <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 text-center">
             <p className="text-lg font-semibold">Nenhum produto encontrado</p>
             <p className="text-sm text-muted-foreground">

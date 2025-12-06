@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Package, Clock, CheckCircle2, XCircle, Truck, PackageCheck } from "lucide-react";
+import { ArrowLeft, Package, Clock, CheckCircle2, XCircle, Truck, PackageCheck, Loader2, ShoppingBag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Order {
@@ -22,93 +21,96 @@ interface Order {
 }
 
 const statusConfig = {
-  pending: { label: "Pendente", icon: Clock, color: "bg-yellow-500" },
-  accepted: { label: "Aceito", icon: CheckCircle2, color: "bg-blue-500" },
-  in_production: { label: "Em Produção", icon: Package, color: "bg-purple-500" },
-  ready: { label: "Pronto", icon: PackageCheck, color: "bg-green-500" },
-  delivered: { label: "Entregue", icon: Truck, color: "bg-emerald-500" },
-  cancelled: { label: "Cancelado", icon: XCircle, color: "bg-red-500" },
+  pending: { label: "Pendente", icon: Clock, color: "bg-yellow-500", description: "Aguardando confirmação" },
+  accepted: { label: "Aceito", icon: CheckCircle2, color: "bg-blue-500", description: "Pedido confirmado" },
+  in_production: { label: "Em Produção", icon: Package, color: "bg-purple-500", description: "Preparando seu pedido" },
+  ready: { label: "Pronto", icon: PackageCheck, color: "bg-green-500", description: "Pronto para entrega" },
+  delivered: { label: "Entregue", icon: Truck, color: "bg-emerald-500", description: "Pedido entregue" },
+  cancelled: { label: "Cancelado", icon: XCircle, color: "bg-red-500", description: "Pedido cancelado" },
 };
 
 const OrderStatus = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [phone, setPhone] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(false);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [userPhone, setUserPhone] = useState<string | null>(null);
 
   useEffect(() => {
-    checkUser();
+    fetchUserOrders();
   }, []);
 
-  const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user?.email) {
-      setUserEmail(session.user.email);
-      fetchUserOrders(session.user.email);
-    }
-  };
-
-  const fetchUserOrders = async (email: string) => {
+  const fetchUserOrders = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("customer_email", email)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching orders:", error);
-    } else {
-      setOrders(data || []);
-      setSearched(true);
-    }
-    setLoading(false);
-  };
-
-  const searchOrders = async () => {
-    if (!phone.trim()) {
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
       toast({
-        title: "Telefone obrigatório",
-        description: "Digite seu telefone para consultar pedidos",
+        title: "Faça login",
+        description: "Entre na sua conta para ver seus pedidos",
         variant: "destructive",
       });
+      navigate("/auth");
       return;
     }
 
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("customer_phone", phone)
-      .order("created_at", { ascending: false });
+    // Get user's phone from profile
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("phone")
+      .eq("id", session.user.id)
+      .single();
 
-    if (error) {
-      console.error("Error fetching orders:", error);
-      toast({
-        title: "Erro ao buscar pedidos",
-        description: "Tente novamente mais tarde",
-        variant: "destructive",
-      });
-    } else {
-      setOrders(data || []);
-      setSearched(true);
-      if (!data || data.length === 0) {
+    if (profile?.phone) {
+      setUserPhone(profile.phone);
+      
+      // Fetch orders by phone
+      const { data: ordersData, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("customer_phone", profile.phone)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error("Error fetching orders:", error);
         toast({
-          title: "Nenhum pedido encontrado",
-          description: "Não encontramos pedidos com este telefone",
+          title: "Erro ao buscar pedidos",
+          description: "Tente novamente mais tarde",
+          variant: "destructive",
         });
+      } else {
+        setOrders(ordersData || []);
       }
     }
+    
     setLoading(false);
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return "-";
     const date = new Date(dateString);
     return date.toLocaleDateString("pt-BR");
   };
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -124,86 +126,84 @@ const OrderStatus = () => {
       <main className="container px-4 py-8 relative z-10">
         <div className="mx-auto max-w-2xl space-y-6">
           <div className="text-center">
-            <h1 className="text-3xl font-bold mb-2">
-              {userEmail ? "Meus Pedidos" : "Status do Pedido"}
-            </h1>
-            <p className="text-muted-foreground">
-              {userEmail ? `Pedidos associados a ${userEmail}` : "Consulte o status dos seus pedidos"}
-            </p>
+            <h1 className="text-3xl font-bold mb-2">Meus Pedidos</h1>
+            {userPhone && (
+              <p className="text-muted-foreground">
+                Telefone: {userPhone}
+              </p>
+            )}
           </div>
 
-          {!userEmail && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Consultar Pedidos</CardTitle>
-                <CardDescription>Digite seu telefone para ver seus pedidos</CardDescription>
-              </CardHeader>
+          {orders.length === 0 ? (
+            <Card className="text-center py-12">
               <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    type="tel"
-                    placeholder="(00) 00000-0000"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && searchOrders()}
-                  />
-                  <Button onClick={searchOrders} disabled={loading}>
-                    {loading ? "Buscando..." : "Buscar"}
-                  </Button>
+                <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
+                <div>
+                  <h3 className="text-xl font-semibold text-muted-foreground">
+                    Nenhum pedido encontrado
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Faça seu primeiro pedido e acompanhe aqui!
+                  </p>
                 </div>
+                <Button onClick={() => navigate("/")} className="mt-4">
+                  Fazer Pedido
+                </Button>
               </CardContent>
             </Card>
-          )}
-
-          {searched && orders.length > 0 && (
+          ) : (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Seus Pedidos</h2>
               {orders.map((order) => {
-                const status = statusConfig[order.status as keyof typeof statusConfig];
+                const status = statusConfig[order.status as keyof typeof statusConfig] || statusConfig.pending;
                 const StatusIcon = status.icon;
 
                 return (
-                  <Card key={order.id}>
-                    <CardHeader>
+                  <Card key={order.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div>
-                          <CardTitle className="text-lg">Pedido #{order.id.slice(0, 8)}</CardTitle>
+                          <CardTitle className="text-lg">
+                            Pedido #{order.id.slice(0, 8).toUpperCase()}
+                          </CardTitle>
                           <CardDescription>
-                            Realizado em {formatDate(order.created_at)}
+                            {formatDateTime(order.created_at)}
                           </CardDescription>
                         </div>
-                        <Badge className={`${status.color} text-white gap-1`}>
+                        <Badge className={`${status.color} text-white gap-1 px-3 py-1`}>
                           <StatusIcon className="h-3 w-3" />
                           {status.label}
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-4">
+                      {/* Status description */}
+                      <div className="bg-muted/50 rounded-lg p-3 flex items-center gap-3">
+                        <StatusIcon className={`h-8 w-8 ${status.color.replace('bg-', 'text-')}`} />
+                        <div>
+                          <p className="font-medium">{status.label}</p>
+                          <p className="text-sm text-muted-foreground">{status.description}</p>
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <p className="text-muted-foreground">Nome</p>
-                          <p className="font-medium">{order.customer_name}</p>
-                        </div>
-                        <div>
                           <p className="text-muted-foreground">Total</p>
-                          <p className="font-bold text-primary">
+                          <p className="font-bold text-primary text-lg">
                             R$ {order.total.toFixed(2).replace(".", ",")}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Entrega Programada</p>
-                          <p className="font-medium">
-                            {formatDate(order.scheduled_date)} às {order.scheduled_time}
                           </p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Pagamento</p>
                           <p className="font-medium">{order.payment_method}</p>
                         </div>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-sm">Endereço</p>
-                        <p className="font-medium">{order.customer_address}</p>
+                        {order.scheduled_date && (
+                          <div className="col-span-2">
+                            <p className="text-muted-foreground">Entrega Programada</p>
+                            <p className="font-medium">
+                              {formatDate(order.scheduled_date)} às {order.scheduled_time || "-"}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

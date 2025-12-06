@@ -62,32 +62,29 @@ export function PromotionShowcase({ onAddToCart }: PromotionShowcaseProps) {
   };
 
   const handleAddToCart = (promo: Promotion) => {
-    if (promo.product_id && promo.product) {
-      // Product-specific promotion (combo)
-      const comboName = promo.quantity && promo.quantity > 1
-        ? `${promo.quantity}x ${promo.product.name} (${promo.title})`
-        : `${promo.product.name} (${promo.title})`;
-      
-      onAddToCart(
-        promo.product.id,
-        1, // Add as single combo item
-        undefined,
-        promo.special_price || promo.product.price,
-        comboName,
-        undefined
-      );
-      
-      toast({
-        title: "Promoção adicionada!",
-        description: comboName,
-      });
-    } else {
-      // General promotion without product - show info
-      toast({
-        title: promo.title,
-        description: promo.description || "Promoção disponível na loja!",
-      });
-    }
+    // Promoções podem ter produto vinculado ou ser combos independentes
+    const comboName = promo.product 
+      ? (promo.quantity && promo.quantity > 1
+          ? `${promo.quantity}x ${promo.product.name} (${promo.title})`
+          : `${promo.product.name} (${promo.title})`)
+      : promo.title;
+    
+    const price = promo.special_price || promo.product?.price || 0;
+    const productId = promo.product?.id || promo.id; // Usa ID da promoção se não tiver produto
+    
+    onAddToCart(
+      productId,
+      1,
+      undefined,
+      price,
+      comboName,
+      undefined
+    );
+    
+    toast({
+      title: "Promoção adicionada!",
+      description: comboName,
+    });
   };
 
   if (promotions.length === 0) {
@@ -201,8 +198,8 @@ export function PromotionShowcase({ onAddToCart }: PromotionShowcaseProps) {
                 </div>
               )}
 
-              {/* Add to cart button */}
-              {promo.product_id && promo.product && (
+              {/* Add to cart button - show for all promotions with a price */}
+              {(promo.special_price || promo.product) && (
                 <Button
                   onClick={() => handleAddToCart(promo)}
                   className="w-full gap-2 text-lg py-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg"

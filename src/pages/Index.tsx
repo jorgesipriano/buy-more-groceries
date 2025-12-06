@@ -231,12 +231,24 @@ const Index = () => {
       }
       // --- FIM DA ADIÇÃO ---
       // 2. SALVA OS ITENS NO SUPABASE (O que já existia)
-      const orderItems = cartItems.map((item) => ({
-        order_id: order.id,
-        product_id: item.id,
-        quantity: item.quantity,
-        price: item.price,
-      }));
+      // Para combos, extraímos o product_id real do formato "combo-{productId}-{name}"
+      const orderItems = cartItems.map((item) => {
+        let productId = item.id;
+        
+        // Se for um combo, extrair o product_id real
+        if (item.id.startsWith("combo-")) {
+          const parts = item.id.split("-");
+          productId = parts[1]; // O segundo elemento é o UUID do produto/promoção
+        }
+        
+        return {
+          order_id: order.id,
+          product_id: productId,
+          quantity: item.quantity,
+          price: item.price,
+        };
+      });
+      
       const { error: itemsError } = await supabase
         .from("order_items")
         .insert(orderItems);
